@@ -1,11 +1,10 @@
-import axios from 'axios';
+import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 import { MongoClient } from 'mongodb';
 import pLimit from 'p-limit';
 import { MONGO_URI } from '../config.js';
 
 const DATABASE_NAME = 'real-estate';
-
 const COLLECTION_NAME = 'properties';
 
 // MongoDB client
@@ -55,9 +54,7 @@ async function removeStaleRecords(scrapeTimestamp) {
   }
 }
 
-
-
-async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = 1) {
+async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = Infinity) {
   try {
     const scrapeTimestamp = Date.now(); 
     let currentPage = 1;
@@ -67,8 +64,9 @@ async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = 1
       console.log(`Scraping page ${currentPage}: ${url}`);
 
       // Fetch the HTML content of the target website
-      const response = await axios.get(url);
-      const html = response.data;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+      const html = await response.text();
 
       // Load the HTML into Cheerio
       const $ = cheerio.load(html);
@@ -92,7 +90,7 @@ async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = 1
       });
 
       // Limit concurrent requests for fetching details
-      const limit = pLimit(20); // Set concurrency limit to 5
+      const limit = pLimit(20); // Set concurrency limit to 20
       const detailedProperties = await Promise.all(
         properties.map((property) =>
           limit(async () => {
@@ -123,7 +121,7 @@ async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = 1
 
     // Save all collected data to MongoDB in a single bulk operation
     console.log(`Inserting ${allProperties.length} records into MongoDB...`);
-    await saveToMongoDB(allProperties);
+    await saveToMongoDB(allProperties, scrapeTimestamp);
     await removeStaleRecords(scrapeTimestamp);
 
     console.log('Scraping and saving complete.');
@@ -135,8 +133,9 @@ async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = 1
 // Helper function to fetch details from the property detail page
 async function getDetailedPropertyInfo(url) {
   try {
-    const response = await axios.get(url);
-    const html = response.data;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    const html = await response.text();
     const $ = cheerio.load(html);
 
     // Extract full description
