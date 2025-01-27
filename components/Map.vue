@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id = 'app'>
     <!-- Map Container -->
     <div id="map" class="w-full border border-gray-300 rounded-md"></div>
   </div>
@@ -20,7 +20,7 @@ onMounted(() => {
 
     map = new google.maps.Map(document.getElementById('map'), {
       mapId: process.env.NUXT_MAP_ID, // Use Map ID if configured
-      center: { lat: 37.7749, lng: -122.4194 }, // Default center
+      center: { lat: 48.6737532, lng: 19.696058 }, // Default center
       zoom: 8, // Default zoom
     });
 
@@ -55,6 +55,6 @@ onMounted(() => {
 <style scoped>
 #map {
   width: 100%;
-  height: 93vh;
+  height: 100vh; /* Full viewport height */
 }
 </style>

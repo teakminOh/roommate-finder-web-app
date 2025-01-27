@@ -1,5 +1,5 @@
 <template>
-  <nav class="text-blue-900">
+  <nav class="navbar fixed top-0 left-0 w-full bg-white shadow-md text-blue-900 z-10">
     <div class="container mx-auto flex justify-between items-center py-4 px-6">
       <!-- Logo -->
       <a href="#" class="text-2xl font-bold text-blue-900">RealEstateApp</a>
@@ -36,19 +36,6 @@
         </svg>
       </button>
     </div>
-
-    <!-- Mobile Menu with Slide Down/Up Effect -->
-    <transition name="slide">
-      <div
-        v-if="menuOpen"
-        class="md:hidden bg-blue-200 py-2"
-      >
-        <a href="/buy" class="block py-2 px-4 hover:bg-blue-300">Kúp</a>
-        <a href="/sell" class="block py-2 px-4 hover:bg-blue-300">Predaj</a>
-        <a href="/contact" class="block py-2 px-4 hover:bg-blue-300">Kontakt</a>
-        <a href="/login" class="block py-2 px-4 hover:bg-blue-300">Prihlásiť sa</a>
-      </div>
-    </transition>
   </nav>
 </template>
 
@@ -90,4 +77,5 @@ const toggleMenu = () => {
   transform: translateY(-100%);
   opacity: 0;
 }
+
 </style>

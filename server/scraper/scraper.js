@@ -53,15 +53,14 @@ async function removeStaleRecords(scrapeTimestamp) {
     await client.close();
   }
 }
-
-async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = Infinity) {
+async function scrapeProperties(url = 'https://reality.bazos.sk/') {
   try {
-    const scrapeTimestamp = Date.now(); 
-    let currentPage = 1;
+    const scrapeTimestamp = Date.now();
     const allProperties = []; // Array to hold all properties
-
-    while (currentPage <= pageLimit) {
-      console.log(`Scraping page ${currentPage}: ${url}`);
+    const totalListings = await getTotalListings();
+    let pages = totalListings/20;
+    for(let i = 0; i < pages; i++){
+      console.log(`Scraping page ${i+1}: ${url}`);
 
       // Fetch the HTML content of the target website
       const response = await fetch(url);
@@ -111,12 +110,12 @@ async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = I
       // Append detailed properties to the global array
       allProperties.push(...detailedProperties);
 
-      // Check for the "Next" page
-      const nextPageLink = $('div.strankovani a:contains("Ďalšia")').attr('href');
-      if (!nextPageLink) break; // Stop if there are no more pages
-
-      url = `https://reality.bazos.sk${nextPageLink}`;
-      currentPage++;
+      const nextPage = 20 * (i + 1);      
+      // Add the next page link to the visited set and update the URL
+      if(nextPage >= totalListings){
+        break;
+      }
+      url = `https://reality.bazos.sk/${nextPage}/`;
     }
 
     // Save all collected data to MongoDB in a single bulk operation
@@ -127,6 +126,36 @@ async function scrapeProperties(url = 'https://reality.bazos.sk/', pageLimit = I
     console.log('Scraping and saving complete.');
   } catch (error) {
     console.error('Error during scraping:', error);
+  }
+}
+
+async function getTotalListings(url = 'https://reality.bazos.sk/') {
+  try {
+    // Fetch the HTML content of the first page
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    const html = await response.text();
+
+    // Load the HTML into Cheerio
+    const $ = cheerio.load(html);
+
+    // Extract the text containing the total number of listings
+    const listingInfoText = $('.inzeratynadpis').text().trim();
+    console.log(`Listing info text: "${listingInfoText}"`);
+
+    // Extract numbers using a regex
+    const match = listingInfoText.match(/Zobrazených (\d+)-(\d+) inzerátov z ([\d\s]+)/);
+    if (match) {
+      const total = parseInt(match[3].replace(/\s+/g, ''), 10); // Remove spaces and convert to number
+      console.log(`Total listings: ${total}`);
+      return total;
+    } else {
+      console.log('Failed to extract total listings.');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching total listings:', error);
+    return null;
   }
 }
 

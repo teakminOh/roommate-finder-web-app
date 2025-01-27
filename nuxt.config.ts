@@ -10,6 +10,9 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ],
       script: [
         {
           src: `https://maps.googleapis.com/maps/api/js?key=${process.env.NUXT_GOOGLE_MAPS_API_KEY}&loading=async&libraries=places`,
@@ -21,7 +24,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:3000', // Your API base URL
+      apiBase: 'http://localhost:3001', // Your API base URL
     },
   },
     
