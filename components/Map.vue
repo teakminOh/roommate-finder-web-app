@@ -40,7 +40,7 @@ onMounted(() => {
         }
       });
     } else {
-      alert('No address provided!');
+      console.log('No address provided fallback to properties sorted by date.');
     }
   };
 

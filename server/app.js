@@ -20,47 +20,55 @@ app.get('/properties', async (req, res) => {
     const { address, sort = 'date', order = 'desc', limit = 10, skip = 0 } = req.query;
     const limitNumber = parseInt(limit, 10);
     const skipNumber = parseInt(skip, 10);
+    
+    let cityName = '';
+    let postalCode = '';
 
-    let fullLocation = '';
     if (address) {
       const parts = address.split(',');
-      const location = parts[0].trim();
-      const postalCode = location.slice(0, 6).trim();
-      const city = location.slice(location.indexOf(' ') + 3).trim();
+      const location = parts[0].trim(); // Extract the first part of the address
+      const firstSpaceIndex = location.indexOf(' ');
 
-      if (postalCode && city) {
-        fullLocation = `${city} ${postalCode}`;
+      if (firstSpaceIndex !== -1) {
+        postalCode = location.slice(0, firstSpaceIndex + 3).trim(); // Extract postal code
+        cityName = location.slice(firstSpaceIndex + 3).trim(); // Extract city name
+      } else {
+        cityName = location; // Use the entire location if no spaces are found
       }
     }
-
-    // MongoDB filter
-    const filter = fullLocation
-      ? { location: { $regex: `^${fullLocation}`, $options: 'i' } }
-      : {};
+    console.log('cityName:', cityName);
+    console.log('postalCode:', postalCode);
+    
+    // Initial MongoDB filter based on postal code
+    let filter = postalCode
+      ? { location: { $regex: `\\b${postalCode}\\b`, $options: 'i' } } // Match postal code as a whole word
+      : { location: { $regex: `\\b${cityName}\\b`, $options: 'i' } };
 
     const sortOrder = { [sort]: order === 'asc' ? 1 : -1 };
 
-    // Fetch total count for pagination
-    const totalCount = await collection.countDocuments(filter);
-
-    // Fetch properties with limit and skip for pagination
-    const properties = await collection
+    // Fetch properties based on postal code
+    let properties = await collection
       .find(filter)
       .sort(sortOrder)
       .skip(skipNumber)
       .limit(limitNumber)
       .toArray();
 
-    // If no properties are returned, indicate no more pages
-    if (properties.length === 0 && skipNumber > 0) {
-      return res.json({
-        properties: [],
-        totalCount,
-        currentPage: Math.floor(skipNumber / limitNumber) + 1,
-        totalPages: Math.ceil(totalCount / limitNumber),
-        noMoreProperties: true,
-      });
+    // Fallback to city name if no properties are found for postal code
+    if (properties.length === 0) {
+      console.log('No properties found for postal code, trying city name instead');
+      console.log('cityName:', cityName); 
+      filter = { location: {}}; // Match city name as a whole word
+      properties = await collection
+        .find(filter)
+        .sort(sortOrder)
+        .skip(skipNumber)
+        .limit(limitNumber)
+        .toArray();
     }
+
+    // Fetch total count for pagination
+    const totalCount = await collection.countDocuments(filter);
 
     // Respond with properties and pagination metadata
     res.json({
@@ -74,6 +82,9 @@ app.get('/properties', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+
 
 app.get('/preview-properties', async (req, res) => {
   try {

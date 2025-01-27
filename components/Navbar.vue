@@ -2,7 +2,7 @@
   <nav class="navbar fixed top-0 left-0 w-full bg-white shadow-md text-blue-900 z-10">
     <div class="container mx-auto flex justify-between items-center py-4 px-6">
       <!-- Logo -->
-      <a href="#" class="text-2xl font-bold text-blue-900">RealEstateApp</a>
+      <a href="/" class="text-2xl font-bold text-blue-900">RealEstateApp</a>
       <!-- Desktop Links -->
       <ul class="hidden md:flex space-x-6">
         <li><a href="/buy" class="hover:text-black transition">Kúp</a></li>
