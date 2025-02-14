@@ -44,7 +44,8 @@ app.get('/properties', async (req, res) => {
       ? { location: { $regex: `\\b${postalCode}\\b`, $options: 'i' } } // Match postal code as a whole word
       : { location: { $regex: `\\b${cityName}\\b`, $options: 'i' } };
 
-    const sortOrder = { [sort]: order === 'asc' ? 1 : -1 };
+    const sortOrder = { [sort]: order === 'asc' ? 1 : -1, _id: 1 };
+
 
     // Fetch properties based on postal code
     let properties = await collection
