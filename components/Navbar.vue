@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar fixed top-0 left-0 w-full bg-white shadow-md text-blue-900 z-10">
+  <nav class="navbar fixed top-0 left-0 w-full bg-white shadow-md text-blue-900 z-20">
     <div class="container mx-auto flex justify-between items-center py-4 px-6">
       <!-- Logo -->
       <a href="/" class="text-2xl font-bold text-blue-900">RealEstateApp</a>
@@ -9,12 +9,17 @@
         <li><a href="/sell" class="hover:text-black transition">Predaj</a></li>
         <li><a href="/contact" class="hover:text-black transition">Kontakt</a></li>
         <li>
-          <a
-            href="/login"
-            class="hover:text-black hover:bg-blue-200 transition rounded bg-blue-100 p-2"
+          <a v-if="!isAuthenticated" 
+            @click.prevent="openLogin"
+            class="hover:text-black hover:bg-blue-200 transition rounded bg-blue-100 p-2 cursor-pointer"
           >
             Prihlásiť sa
           </a>
+          <UserDropdown 
+            v-else
+            :userInitials="userInitials"
+            @signOut="signOut"
+          />
         </li>
       </ul>
 
@@ -39,8 +44,43 @@
   </nav>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
+import { useCurrentUser, useFirebaseAuth } from 'vuefire';
+import { signOut as firebaseSignOut } from 'firebase/auth';
+import UserDropdown from './UserDropdown.vue';
+import { useAuthModal } from '../composables/useAuthModal';
+
+const auth = useFirebaseAuth();
+const user = useCurrentUser();
+
+const isAuthenticated = ref(false);
+const userInitials = ref('');
+
+// Watch for auth state changes
+watch(user, (newUser) => {
+  isAuthenticated.value = !!newUser;
+  if (newUser?.displayName) {
+    // Get initials from display name
+    userInitials.value = newUser.displayName
+      .split(' ')
+      .map((name: string) => name[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  } else if (newUser?.email) {
+    // If no display name, use first letter of email
+    userInitials.value = newUser.email[0].toUpperCase();
+  } else {
+    userInitials.value = 'U'; // Fallback
+  }
+}, { immediate: true });
+
+const showAuthModal = useAuthModal()
+
+const openLogin = () => {
+  showAuthModal.value = true
+}
 
 // Reactive variable for menu state
 const menuOpen = ref(false);
@@ -48,6 +88,19 @@ const menuOpen = ref(false);
 // Method to toggle the menu
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value;
+};
+
+const showDropdown = ref(false);
+
+const signOut = async () => {
+  try {
+    if (auth) {
+      await firebaseSignOut(auth);
+      navigateTo('/');
+    }
+  } catch (error) {
+    console.error('Error signing out:', error);
+  }
 };
 </script>
 

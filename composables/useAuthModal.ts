@@ -1,0 +1,1 @@
+export const useAuthModal = () => useState('auth-modal', () => false) 

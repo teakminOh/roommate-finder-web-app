@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container mx-auto px-4 py-8">
     <h1 class="text-2xl text-center font-bold m-8">Nedávno pridané</h1>
     <div v-if="loading" class="text-center text-gray-500">Loading preview properties...</div>
     <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>

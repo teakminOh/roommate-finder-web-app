@@ -1,17 +1,24 @@
 <template>
   <div>
     <div
-      class="bg-white p-4 rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 relative cursor-pointer"
+      class="bg-white rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 relative cursor-pointer"
       @mouseenter="showArrows = true"
       @mouseleave="showArrows = false"
       @click="isModalOpen = true"
     >
+      <!-- Add Favorite Button -->
+      <FavoriteButton
+        :modelValue="isFavorited(props.property)"
+        :property="props.property"
+        @update:modelValue="updateFavoriteStatus"
+      />
+
       <!-- Display Current Image or Fallback -->
       <div class="relative">
         <img
           :src="props.property.images && props.property.images.length > 0 ? props.property.images[currentImageIndex] : '/images/placeholder.jpg'"
           alt="Property Image"
-          class="w-full h-64 object-cover rounded-md mb-2"
+          class="w-full h-64 object-cover rounded-t-md"
         />
         
         <!-- Navigation Arrows -->
@@ -36,11 +43,13 @@
         </button>
       </div>
 
-      <h2 class="text-lg font-bold">{{ props.property.title }}</h2>
-      <p class="text-gray-700 text-sm">
-        {{ truncateText(props.property.fullDescription, 100) }}
-      </p>
-      <p class="text-blue-500 font-semibold">{{ props.property.price }}</p>
+      <div class="p-2">
+        <h2 class="text-lg font-bold">{{ props.property.title }}</h2>
+        <p class="text-gray-700 text-sm">
+          {{ truncateText(props.property.fullDescription, 100) }}
+        </p>
+        <p class="text-blue-500 font-semibold">{{ props.property.price }}</p>
+      </div>
     </div>
 
     <!-- Use the PropertyModal component -->
@@ -54,6 +63,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import FavoriteButton from './FavoriteButton.vue';
+import { useFavorites } from '~/composables/useFavorites';
 
 interface Property {
   title: string;
@@ -66,9 +77,20 @@ const props = defineProps<{
   property: Property;
 }>();
 
+const { favorites } = useFavorites();
+
 const currentImageIndex = ref(0);
 const showArrows = ref(false);
 const isModalOpen = ref(false);
+
+const isFavorited = (property: Property) => {
+  return favorites.value?.some(fav => fav.property.title === property.title) ?? false;
+};
+
+// Update the favorite status when the button is toggled
+const updateFavoriteStatus = (newStatus: boolean) => {
+  // This function can be used to perform any additional actions if needed
+};
 
 // Helper function to truncate text
 const truncateText = (text: string, maxLength: number): string => {

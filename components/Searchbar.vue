@@ -41,7 +41,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'nuxt/app';
 
 const searchQuery = ref('');
 const router = useRouter();
