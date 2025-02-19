@@ -13,18 +13,26 @@ export function useFavorites() {
   const user = useCurrentUser()
   const db = useFirestore()
   
+  if (!user.value) {
+    return {
+      favorites: ref([]),
+      addFavorite: () => {},
+      removeFavorite: () => {},
+      isFavorited: () => false
+    }
+  }
   const favorites = useCollection(
     query(
       collection(db, 'favorites'),
       where('userId', '==', user.value?.uid || 'none')
-    )
+    ),
+    { ssrKey: 'my-favs' }
   )
 
   // Add a property to favorites
   const addFavorite = async (property: Property) => {
     if (!user.value) {
-      alert('Please log in to add favorites');
-      return;
+      return false;
     }
 
     try {
@@ -36,6 +44,7 @@ export function useFavorites() {
       });
     } catch (error) {
       console.error('Error adding favorite:', error);
+      return true;
     }
   }
 

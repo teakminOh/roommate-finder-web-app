@@ -22,12 +22,16 @@ const emit = defineEmits<{
 }>();
 
 const { addFavorite, removeFavorite } = useFavorites();
+const showAuthModal = useAuthModal()
 
 const toggleFavorite = async () => {
   if (props.modelValue) {
     await removeFavorite(props.property);
   } else {
-    await addFavorite(props.property);
+    const success = await addFavorite(props.property);
+    if (!success) {
+      showAuthModal.value = true;
+    }
   }
   emit('update:modelValue', !props.modelValue);
 };
