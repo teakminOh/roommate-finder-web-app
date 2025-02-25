@@ -2,6 +2,7 @@
   <div>
     <NuxtLayout>
       <NuxtPage />
+      <LoginModal />
     </NuxtLayout>
   </div>
 </template>

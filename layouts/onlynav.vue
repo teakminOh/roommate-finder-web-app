@@ -1,7 +1,6 @@
 <template>
-    <div>
+    <div class = "mt-20">
       <Navbar/>
-      
       <slot />
     </div>
   </template>

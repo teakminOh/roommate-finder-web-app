@@ -46,18 +46,9 @@ export default defineNuxtConfig({
     },
     db: {
       enabled: true,
-      rules: {
-        'match /databases/{database}/documents': {
-          'match /properties/{document=**}': {
-            'allow read': 'request.auth != null',
-            'allow write': 'request.auth != null'
-          },
-          'match /favorites/{document=**}': {
-            'allow read': 'request.auth != null',
-            'allow write': 'request.auth != null && request.auth.uid == request.resource.data.userId'
-          }
-        }
       },
-    }
+    storage: {
+      enabled: true,
+    } 
   },
 })

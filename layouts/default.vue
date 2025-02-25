@@ -4,6 +4,5 @@
     <Searchbar/>
     <Preview/>
     <slot/>
-    <LoginModal />
   </div>
 </template>

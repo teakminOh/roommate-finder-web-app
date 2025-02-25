@@ -54,20 +54,6 @@ app.get('/properties', async (req, res) => {
       .skip(skipNumber)
       .limit(limitNumber)
       .toArray();
-
-    // // Fallback to city name if no properties are found for postal code
-    // if (properties.length === 0) {
-    //   console.log('No properties found for postal code, trying city name instead');
-    //   console.log('cityName:', cityName); 
-    //   filter = { location: {}}; // Match city name as a whole word
-    //   properties = await collection
-    //     .find(filter)
-    //     .sort(sortOrder)
-    //     .skip(skipNumber)
-    //     .limit(limitNumber)
-    //     .toArray();
-    // }
-
     // Fetch total count for pagination
     const totalCount = await collection.countDocuments(filter);
     console.log('totalCount:', totalCount);
@@ -84,9 +70,6 @@ app.get('/properties', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
-
 
 app.get('/preview-properties', async (req, res) => {
   try {
@@ -107,7 +90,6 @@ app.get('/preview-properties', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
