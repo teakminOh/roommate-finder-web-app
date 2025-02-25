@@ -23,13 +23,14 @@ const emit = defineEmits<{
 
 const { addFavorite, removeFavorite } = useFavorites();
 const showAuthModal = useAuthModal()
+const user = useCurrentUser()
 
 const toggleFavorite = async () => {
   if (props.modelValue) {
     await removeFavorite(props.property);
   } else {
-    const success = await addFavorite(props.property);
-    if (!success) {
+    await addFavorite(props.property)
+    if (!user.value) {
       showAuthModal.value = true;
     }
   }

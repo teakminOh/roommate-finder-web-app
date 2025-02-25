@@ -12,12 +12,12 @@
       class="absolute right-0 top-full mt-2 py-2 w-48 bg-white rounded-lg shadow-xl z-50"
     >
       <a 
-        @click="handleSignOut"
+        @click.prevent="handleSignOut"
         class="block px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
       >
         Odhlásiť sa
       </a>
-        <a href="/favorites" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer">Saved</a>
+        <a href="/favorites" class="block px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer" @click.prevent="navigateTo('/favorites')">Saved</a>
     </div>
   </div>
 </template>
@@ -59,6 +59,7 @@ const toggleDropdown = (event: MouseEvent) => {
 const handleSignOut = () => {
   signOut(auth);
   showDropdown.value = false;
+  navigateTo('/');
 };
 </script>
 

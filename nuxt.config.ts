@@ -2,6 +2,9 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-15',
   devtools: { enabled: true },
   css: ['~/assets/main.scss',],
+  runtimeConfig: {
+    googleCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  },
   postcss: {
     plugins: {
       tailwindcss: {},

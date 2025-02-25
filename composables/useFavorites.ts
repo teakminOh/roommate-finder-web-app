@@ -44,7 +44,6 @@ export function useFavorites() {
       });
     } catch (error) {
       console.error('Error adding favorite:', error);
-      return true;
     }
   }
 
