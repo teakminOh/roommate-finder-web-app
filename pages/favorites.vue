@@ -1,9 +1,9 @@
 <template>
   <div class="container mx-auto px-4 py-8 mt-16">
-    <h1 class="text-3xl font-bold mb-6">Saved Properties</h1>
+    <h1 class="text-3xl font-bold mb-6">Obľúbené inzeráty</h1>
     
     <div v-if="!user" class="text-center py-12">
-      <p class="text-gray-600 mb-4">Please log in to see your saved properties</p>
+      <p class="text-gray-600 mb-4">Prihláste sa, aby ste videli svoje obľúbené inzeráty</p>
       <button 
         @click="showAuthModal = true"
         class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
@@ -13,7 +13,7 @@
     </div>
 
     <div v-else-if="favorites.length === 0" class="text-center py-12">
-      <p class="text-gray-600">No saved properties yet</p>
+      <p class="text-gray-600">Žiadne uložené inzeráty</p>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

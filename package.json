@@ -17,6 +17,9 @@
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "filepond": "^4.32.7",
+    "filepond-plugin-file-validate-type": "^1.2.9",
+    "filepond-plugin-image-preview": "^4.6.12",
     "firebase": "^10.14.1",
     "firebase-admin": "^13.1.0",
     "firebaseui": "^6.1.0",
@@ -32,6 +35,7 @@
     "puppeteer": "^24.1.0",
     "sass": "^1.83.1",
     "vue": "latest",
+    "vue-filepond": "^7.0.4",
     "vue-router": "latest",
     "vuefire": "^3.2.1"
   },
