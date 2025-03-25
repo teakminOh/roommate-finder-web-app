@@ -12,24 +12,11 @@
       </div>
       
       <div class="flex flex-col gap-4">
-        <div class="flex gap-4">
-          <button 
-            @click="isClickedLogin = true"
-            :class="{'border-b-2 border-black': isClickedLogin}"
-          >
-            Prihlásiť sa
-          </button>
-          <button 
-            @click="isClickedLogin = false"
-            :class="{'border-b-2 border-black': !isClickedLogin}"
-          >
-            Registruj sa
-          </button>
-        </div>
+        <h2 class="text-xl font-medium">Prihlásiť sa</h2>
 
         <!-- Email/Password Form -->
         <div class="space-y-4">
-          <form @submit.prevent="isClickedLogin ? signInWithEmail() : signup()" class="space-y-3">
+          <form @submit.prevent="signInWithEmail()" class="space-y-3">
             <input
               v-model="email"
               type="email"
@@ -49,7 +36,7 @@
               class="w-full bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 disabled:bg-gray-400"
               :disabled="loading"
             >
-              {{ loading ? 'Spracováva sa...' : (isClickedLogin ? 'Prihlásiť sa' : 'Registrovať sa') }}
+              {{ loading ? 'Spracováva sa...' : 'Prihlásiť sa' }}
             </button>
           </form>
 
@@ -67,13 +54,32 @@
               Prihlásiť sa cez Google
           </button>
         </div>
+        
+        <!-- Registration Link -->
+        <div class="text-center mt-4 pt-4 border-t border-gray-200">
+          <p class="text-gray-600">Vytvorte si účet <NuxtLink 
+            to="/rooms/create" 
+            class="text-blue-500 hover:text-blue-700 font-medium"
+            @click="showAuthModal = false"
+          >
+          zadaním dostupnej izby
+          </NuxtLink> alebo vytvorením  <NuxtLink 
+            to="/profile/create" 
+            class="text-blue-500 hover:text-blue-700 font-medium"
+            @click="showAuthModal = false"
+          >
+          profilu s požiadavkou na izbu.
+          </NuxtLink></p>
+          
+         
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth'
+import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from 'firebase/auth'
 import { useFirebaseAuth } from 'vuefire'
 import { FirebaseError } from 'firebase/app'
 
@@ -83,7 +89,6 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
-const isClickedLogin = ref(true)
 
 async function signInWithGoogle() {
   try {
@@ -114,48 +119,6 @@ async function signInWithEmail() {
     }
   } finally {
     loading.value = false
-  }
-}
-
-async function signup() {
-  if (import.meta.server) return
-
-  if (!auth) {
-    error.value = 'Firebase autentifikácia nie je dostupná.'
-    return
-  }
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value)
-    const user = userCredential.user
-    // Call server endpoint to generate verification link
-    const response = await $fetch('/api/send-verification', {
-      method: 'POST',
-      body: { uid: user.uid },
-    })
-
-    console.log('Verification link:', response.link)
-  } catch (err) {
-    const errorObj = err as FirebaseError
-    if (errorObj.code === 'auth/email-already-in-use') {
-      error.value = 'Tento email je už zaregistrovaný.'
-    } else if (errorObj.code === 'auth/invalid-email') {
-      error.value = 'Nesprávny formát emailu.'
-    } else if (errorObj.code === 'auth/weak-password') {
-      error.value = 'Heslo musí mať aspoň 6 znakov.'
-    } else {
-      error.value = 'Chyba pri registrácii: ' + errorObj.message
-    }
-  } finally {
-    loading.value = false
-    const user = await getCurrentUser()
-    if (user) {
-      await sendEmailVerification(user)
-      console.log('Email verification sent')
-    }
   }
 }
 </script>

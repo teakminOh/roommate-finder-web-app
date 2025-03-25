@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="space-y-4">
     <label for="title">Názov
       <input 
         type="text" 
@@ -8,7 +8,7 @@
         placeholder="Názov (napr. NOVO zariadený 2-IZB BYT)" 
         class="w-full px-3 py-2 border rounded-lg"
       />
-     </label>
+    </label>
 
     <label for="fullDescription">Popis
       <textarea 
@@ -18,16 +18,9 @@
         class="w-full px-3 py-2 border rounded-lg h-32"
       ></textarea>
     </label>    
+    
+    <LocationInput v-model="form.location" @location-changed="handleLocationChange" />
 
-    <label for="location">Lokalita
-      <input 
-        type="text" 
-        id="location"
-        v-model="form.location" 
-        placeholder="Lokalita (napr. Bratislava 851 01)" 
-        class="w-full px-3 py-2 border rounded-lg"
-      />
-    </label>
     <label for="phoneNumber">Telefónne číslo
       <input 
         type="text" 
@@ -37,43 +30,55 @@
         class="w-full px-3 py-2 border rounded-lg"
       />
     </label>
+
     <label for="price">Cena
-    <input 
-      type="text" 
-      id="price"
-      v-model="form.price" 
-      placeholder="Cena (napr. 700 €)" 
-      class="w-full px-3 py-2 border rounded-lg"
-    />  
+      <input 
+        type="text" 
+        id="price"
+        v-model="form.price" 
+        placeholder="Cena (napr. 700 €)" 
+        class="w-full px-3 py-2 border rounded-lg"
+      />  
     </label>
+
     <label for="saleType">Typ predaja
-    <select 
-      id="saleType"
-      v-model="form.saleType" 
-      class="px-3 py-2 border rounded-lg"
-    >
-      <option value="sale">Predaj</option>
-      <option value="rent">Prenájom</option>
-    </select>
+      <select 
+        id="saleType"
+        v-model="form.saleType" 
+        class="px-3 py-2 border rounded-lg"
+      >
+        <option value="sale">Predaj</option>
+        <option value="rent">Prenájom</option>
+      </select>
     </label>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import LocationInput from '~/components/LocationInput.vue'
 import { reactive } from 'vue'
 
-// Define form data as reactive
 const form = reactive({
   link: '',
-  date: '',
+  date: new Date().toISOString(),
   fullDescription: '',
   location: '',
+  zipCode: '',  // New field for ZIP code
   phoneNumber: '',
   price: '',
   saleType: '',
   title: '',
 })
 
-// Expose form data to parent
 defineExpose({ form })
+
+function handleLocationChange({ address, zipCode }: { address: string; zipCode: string }) {
+  // Update your form data using the formatted address
+  form.location = address;
+  form.zipCode = zipCode;
+  console.log('New location:', address, 'ZIP:', zipCode);
+}
+
 </script>
+
+

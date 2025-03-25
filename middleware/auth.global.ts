@@ -4,11 +4,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const user = await getCurrentUser()
   
   // If user is authenticated and tries to access login page
-  if (user && (to.path === '/login' || to.path === '/signup')) {
-    return navigateTo('/')
-  }
 
   if (!user && (to.path === '/favorites')) {
-    return navigateTo('/login')
+    return navigateTo('/register')
   }
+  // if(user && (to.path === '/profile/create')){
+  //   return navigateTo('/')
+  // }
 }) 
