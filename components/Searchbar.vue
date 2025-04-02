@@ -1,53 +1,60 @@
 <template>
-  <div class="bg-gray-100 p-6 rounded-md shadow-md max-w-lg mx-auto mt-10">
+  <div class="relative max-w-lg mx-auto mt-[150px]">
+    <!-- Mascot Image positioned to overlap with the search bar -->
+    <div class="absolute w-full flex justify-center" style="top: -120px;">
+      <img src="../public/images/TobyLooking.png" alt="Toby Mascot" class="w-48 h-auto z-10" />
+    </div>
+    
     <!-- Search Form -->
-    <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Nájdi svoju nehnuteľnosť</h2>
-    <form @submit.prevent="handleSearch" class="relative">
-      <!-- Input Wrapper -->
-      <div
-        class="flex items-center border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-400 transition"
-      >
-        <!-- Input Field -->
-        <input
-          id="autocomplete"
-          type="text"
-          placeholder="Zadajte adresu alebo lokalitu"
-          class="w-full px-4 py-2 rounded-l-md focus:outline-none"
-        />
-        <!-- Search Button -->
-        <button
-          type="submit"
-          class="text-black px-4 py-2 rounded-r-md hover:bg-blue-100"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
+    <div class="bg-gray-100 p-6 rounded-md shadow-md mt-16 relative z-10">
+      <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Hľadaj!</h2>
+      <form @submit.prevent="handleSearch" class="relative">
+        <!-- Input Wrapper -->
+        <div class="flex items-center border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-400 transition">
+          <!-- Input Field -->
+          <input
+            id="autocomplete"
+            v-model="searchQuery"
+            type="text"
+            placeholder="Zadajte adresu alebo lokalitu"
+            class="w-full px-4 py-2 rounded-l-md focus:outline-none"
+          />
+          <!-- Search Button -->
+          <button
+            type="submit"
+            class="text-black px-4 py-2 rounded-r-md hover:bg-blue-100"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M21 21l-4.35-4.35M15.5 10.5a5 5 0 1 0-10 0 5 5 0 0 0 10 0z"
-            />
-          </svg>
-        </button>
-      </div>
-    </form>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 21l-4.35-4.35M15.5 10.5a5 5 0 1 0-10 0 5 5 0 0 0 10 0z"
+              />
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 const searchQuery = ref('');
 const router = useRouter();
 
 onMounted(() => {
   const input = document.getElementById('autocomplete');
-
+  
   // Function to initialize Google Maps Autocomplete
   const initializeAutocomplete = () => {
     if (window.google && window.google.maps) {
@@ -55,20 +62,20 @@ onMounted(() => {
         types: ['geocode'], // Restrict search results to addresses
         componentRestrictions: { country: 'sk' }, // Restrict to Slovakia
       });
-
+      
       // Handle address selection
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         if (place && place.formatted_address) {
           searchQuery.value = place.formatted_address;
-
+          
           // Immediately navigate to /buy with the selected address
           handleSearch();
         }
       });
     }
   };
-
+  
   // Check if Google Maps script is already loaded
   if (window.google && window.google.maps) {
     initializeAutocomplete();
@@ -78,7 +85,7 @@ onMounted(() => {
     script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NUXT_GOOGLE_MAPS_API_KEY}&libraries=places`;
     script.async = true;
     script.defer = true;
-
+    
     script.onload = initializeAutocomplete; // Initialize once script is loaded
     document.head.appendChild(script);
   }
@@ -98,5 +105,5 @@ const handleSearch = () => {
 </script>
 
 <style scoped>
-/* Prispôsobenie vzhľadu */
+/* Ensure Google autocomplete dropdown is visible */
 </style>

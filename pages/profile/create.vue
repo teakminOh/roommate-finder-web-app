@@ -45,10 +45,9 @@
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option disabled value="">Vyberte možnosť</option>
-              <option value="individual">Jednotlivec</option>
-              <option value="couple">Pár</option>
-              <option value="group">Skupina priateľov</option>
+              <option>Jednotlivec</option>
+              <option>Pár</option>
+              <option>Skupina priateľov</option>
             </select>
           </div>
         </div>
@@ -63,10 +62,9 @@
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option disabled value="">Vyberte pohlavie</option>
-              <option value="male">Muž</option>
-              <option value="female">Žena</option>
-              <option value="other">Iné / Nechcem uviesť</option>
+              <option>Muž</option>
+              <option>Žena</option>
+              <option>Iné / Nechcem uviesť</option>
             </select>
           </div>
         </div>
@@ -266,7 +264,7 @@ async function signup() {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value)
     const user = userCredential.user
-    submitProfile(user.uid);
+    await submitProfile(user.uid);
 
     navigateTo(`/profile/complete-profile/${user.uid}`)
    
@@ -309,7 +307,6 @@ async function submitProfile(uid: string) {
       budget: budget.value,
       livingArrangement: livingArrangement.value,
       gender: gender.value,
-      completedProfile: true,
       updatedAt: serverTimestamp(),
     }, { merge: true })
 
@@ -320,4 +317,6 @@ async function submitProfile(uid: string) {
     loading.value = false
   }
 }
+
+
 </script>

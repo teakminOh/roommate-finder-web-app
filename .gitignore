@@ -24,4 +24,4 @@ logs
 !.env.example
 
 service-account.json
-serviceAccountKey.json
+config/serviceAccountKey.json

@@ -58,6 +58,20 @@
           </div>
 
           <div>
+            <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Telefónne číslo</label>
+            <input
+              id="phoneNumber"
+              v-model="phoneNumber"
+              placeholder="0908071235"
+              type="text"
+              oninput="this.value = this.value.replace(/\D/g, '')"
+              inputmode="numeric"
+              required
+              class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
             <label for="preferredMoveDate" class="block text-sm font-medium text-gray-700">
               Kedy by si sa chcel nasťahovať?
             </label>
@@ -104,9 +118,9 @@
               required
               class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <option value="no_children">Nemám deti</option>
-              <option value="children_visit">Deti ma budú navštevovať</option>
-              <option value="children_live">Deti budú bývať so mnou</option>
+              <option selected>Nemám deti</option>
+              <option>Deti ma budú navštevovať</option>
+              <option>Deti budú bývať so mnou</option>
             </select>
           </div>
         </div>
@@ -543,6 +557,7 @@ const currentStep = ref(0)
 const fileUploader = ref<InstanceType<typeof FileUploader>>()
 
 const age = ref<number | null>(null)
+const phoneNumber = ref<number | null>(null)
 const occupation = ref('')
 const firstName = ref('')
 const isSmoker = ref(false)
@@ -571,7 +586,7 @@ const hasDog = ref(false)
 const hasCat = ref(false)
 const hasPets = ref(false)
 const hasOtherPets = ref(false)
-const childrenStatus = ref('no_children')  // default to no_children
+const childrenStatus = ref('')  // default to no_children
 
 const bio = ref('')
 
@@ -641,6 +656,7 @@ async function submitProfile() {
     await setDoc(doc(db, 'users', uid), {
       firstName: firstName.value,
       age: age.value,
+      phoneNumber: phoneNumber.value,
       preferredMoveDate: preferredMoveDate.value || null,
       occupation: occupation.value,
       isSmoker: isSmoker.value,

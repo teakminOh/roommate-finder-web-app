@@ -73,7 +73,7 @@ defineExpose({ handleProcess, uploadedUrls })
       @updatefiles="updateFiles"
       :allowMultiple="true"
       :acceptedFileTypes="['image/png', 'image/jpeg', 'image/gif']"
-      label-idle='Drag & Drop your images or <span class="filepond--label-action">Browse</span>' 
+      label-idle='Pridajte fotky pre väčšiu šancu na úspech. <span class="filepond--label-action">Browse</span>' 
     />
     <!-- Note: Removed the separate upload button so that parent controls when to upload -->
     <p v-if="uploadError" class="text-red-500">{{ uploadError }}</p>

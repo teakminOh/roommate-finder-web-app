@@ -1,41 +1,53 @@
 <template>
   <nav class="navbar fixed top-0 left-0 w-full bg-white shadow-md text-blue-900 z-20">
-    <div class="container mx-auto flex justify-between items-center py-4 px-6">
-      <!-- Logo -->
-      <NuxtLink to="/" class="text-2xl font-bold text-blue-900">RealEstateApp</NuxtLink>
-      <!-- Desktop Links -->
-      <ul class="hidden md:flex space-x-6">
-        <li><NuxtLink to="/buy" class="hover:text-black transition">Kúp</NuxtLink></li>
-        <li><NuxtLink to="/sell" class="hover:text-black transition" >Predaj</NuxtLink></li>
-        <!-- <li><NuxtLink to="/contact" class="hover:text-black transition" >Kontakt</NuxtLink></li> -->
+    <div class="container mx-auto grid grid-cols-3 items-center py-4 px-6">
+      <!-- Logo (left section) -->
+      <div class="flex items-center space-x-2 ml-32">
+        <img src="../public/images/Toby.png" alt="" class="w-10 h-10" />
+        <NuxtLink to="/" class="text-2xl font-bold text-blue-900">buddies</NuxtLink>
+      </div>
+      
+      <!-- Middle navigation (centered) -->
+      <ul class="flex justify-center">
+        
+      </ul>
+      
+      <!-- Right menu (right-aligned) -->
+      <ul class="hidden md:flex justify-end items-center gap-10 mr-32">
+        <!-- <li><NuxtLink to="/contact" class="hover:text-black transition">Kontakt</NuxtLink></li> -->
+        <li class="hidden md:flex gap-6">
+          <NuxtLink to="/searchroom" class=" hover:text-black p-2 transition flex  justify-center items-center">
+            <img src="../public/images/home1.png" alt="" class="w-6 h-6 mr-2">Izby
+          </NuxtLink>
+          <NuxtLink to="/searchuser" class="  p-2 transition flex  justify-center items-center">
+            <img src="../public/images/user.png" alt="" class="w-6 h-6 mr-2">Spolubývajúci
+          </NuxtLink>
+        </li>
         <li>
-          <a v-if="!isAuthenticated" 
-            @click.prevent="openLogin"
+          <a 
+            v-if="!isAuthenticated" 
+            @click.prevent="openLogin" 
             class="hover:text-black hover:bg-blue-200 transition rounded bg-blue-100 p-2 cursor-pointer"
           >
             Prihlásiť sa
           </a>
-          <UserDropdown 
-            v-else
-            :userInitials="userInitials"
-            @signOut="signOut"
-          />
+          <UserDropdown v-else :userInitials="userInitials" @signOut="signOut" />
         </li>
       </ul>
-
+      
       <!-- Mobile Menu Button -->
-      <button @click="toggleMenu" class="md:hidden focus:outline-none">
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <button @click="toggleMenu" class="md:hidden justify-self-end focus:outline-none">
+        <svg 
+          class="w-6 h-6" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24" 
           xmlns="http://www.w3.org/2000/svg"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
             d="M4 6h16M4 12h16m-7 6h7"
           ></path>
         </svg>
