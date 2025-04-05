@@ -201,6 +201,8 @@ import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword} fr
 import { useFirebaseAuth, useFirestore } from 'vuefire'
 import { FirebaseError } from 'firebase/app'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { GeoPoint } from 'firebase/firestore'
+
 
 
 const db = useFirestore()
@@ -285,11 +287,25 @@ async function signup() {
   }
 }
 
-function handleLocationChange({ address, zipCode }: { address: string; zipCode: string }) {
-  // Update your form data using the formatted address
-  location.value = address;
-  zip.value = zipCode;
+
+const geo = ref<{ lat: number; lng: number } | null>(null)
+
+function handleLocationChange({
+  address,
+  zipCode,
+  lat,
+  lng,
+}: {
+  address: string
+  zipCode: string
+  lat: number
+  lng: number
+}) {
+  location.value = address
+  zip.value = zipCode
+  geo.value = { lat, lng }
 }
+
 
 const success = ref(false)
 
@@ -304,6 +320,7 @@ async function submitProfile(uid: string) {
       email: email.value,
       location: location.value,
       zip: zip.value,
+      coordinates: new GeoPoint(geo.value?.lat || 0, geo.value?.lng || 0),
       budget: budget.value,
       livingArrangement: livingArrangement.value,
       gender: gender.value,

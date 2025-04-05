@@ -189,10 +189,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { useFirebaseAuth, useFirestore } from 'vuefire'
 import { FirebaseError } from 'firebase/app'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { GeoPoint } from 'firebase/firestore'
 
 const db = useFirestore()
 const auth = useFirebaseAuth()!
@@ -214,9 +215,22 @@ const agreedToTerms = ref(false)
 const error = ref('')
 const loading = ref(false)
 
-function handleLocationChange({ address, zipCode }: { address: string; zipCode: string }) {
+const geo = ref<{ lat: number; lng: number } | null>(null)
+
+function handleLocationChange({
+  address,
+  zipCode,
+  lat,
+  lng,
+}: {
+  address: string
+  zipCode: string
+  lat: number
+  lng: number
+}) {
   location.value = address
   zip.value = zipCode
+  geo.value = { lat, lng }
 }
 const success = ref(false)
 
@@ -291,6 +305,7 @@ async function submitProfile(uid: string) {
       email: email.value,
       location: location.value,
       zip: zip.value,
+      coordinates: new GeoPoint(geo.value?.lat || 0, geo.value?.lng || 0),
       budget: budget.value,
       roomType: roomType.value,
       propertyType: propertyType.value,
