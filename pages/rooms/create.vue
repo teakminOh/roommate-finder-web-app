@@ -112,6 +112,18 @@
           />
         </div>
 
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Tel. číslo</label>
+          <input
+            id="phoneNumber"
+            v-model="phoneNumber"
+            type="phoneNumber"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="0908123456"
+          />
+        </div>
+
         <!-- Email -->
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
@@ -210,7 +222,7 @@ const budget = ref<number | null>(null)
 const rentWithBills = ref(false)
 const securityDeposit = ref<number | null>(null)
 const availableFrom = ref('')
-
+const phoneNumber = ref('')
 const agreedToTerms = ref(false)
 const error = ref('')
 const loading = ref(false)
@@ -242,7 +254,7 @@ const propertyTypes = [
   'Suterén',
   'Podkrovie',
   'Garsónka',
-  'Príves'
+  'Apartmán'
 ]
 
 const roomTypes = [
@@ -307,6 +319,7 @@ async function submitProfile(uid: string) {
       zip: zip.value,
       coordinates: new GeoPoint(geo.value?.lat || 0, geo.value?.lng || 0),
       budget: budget.value,
+      phoneNumber: phoneNumber.value,
       roomType: roomType.value,
       propertyType: propertyType.value,
       rentWithBills: rentWithBills.value,

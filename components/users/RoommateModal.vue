@@ -233,7 +233,7 @@
         </div>
 
         <!-- School Information -->
-        <div class="mt-6 bg-purple-50 rounded-xl p-6">
+        <div v-if="roommate.selectedSchool!= ''" class="mt-6 bg-purple-50 rounded-xl p-6">
           <h3 class="text-2xl font-semibold text-purple-900 mb-4">Vzdelanie</h3>
           <div class="grid grid-cols-3 gap-3 text-gray-700">
             <InfoItem 
@@ -250,9 +250,19 @@
             />
           </div>
         </div>
+        <div v-if="loggedInUser" class="mt-6 h-full flex flex-col">
+            <ChatWindow
+              :other-user-id="roommate.id"
+              :other-user-name="roommate.firstName"
+              class="flex-grow min-h-0"
+            />
+          </div>
       </div>
+      
     </div>
+    
   </div>
+  
 
   <FullGallery
     v-if="showFullGallery"
@@ -264,6 +274,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import ChatWindow from '~/components/ChatWindow.vue'; 
 import FullGallery from '../FullGallery.vue';
 import InfoItem from './InfoItem.vue';
 import type { Roommate } from '~/types/user';
@@ -272,7 +283,7 @@ const props = defineProps<{
   roommate: Roommate;
   isOpen: boolean;
 }>();
-
+const loggedInUser = useCurrentUser();
 const emit = defineEmits(['close']);
 const showFullGallery = ref(false);
 const processedImages = ref<Array<{ url: string; width: number; height: number }>>([]);
@@ -286,7 +297,25 @@ const loadImageDimensions = (url: string): Promise<{ width: number; height: numb
     img.src = url;
   });
 };
-
+const showChatView = ref(false);
+watch(() => props.isOpen, (newVal) => {
+    if (newVal) {
+        showChatView.value = false; // Default to profile view when opening
+    }
+});
+watch(() => props.roommate.id, () => {
+     showChatView.value = false; // Reset to profile view if roommate changes while open
+});
+const openChat = () => {
+  // *** ADD GUARD in method too ***
+  if (!loggedInUser.value || loggedInUser.value.uid === props.roommate.id) {
+      console.warn("Cannot open chat: User not logged in or trying to chat with self.");
+      // Optionally show a message to the user
+      // alert("You must be logged in to chat.");
+      return;
+  }
+  showChatView.value = true;
+};
 onMounted(async () => {
   // Process images to get their dimensions
   processedImages.value = await Promise.all(

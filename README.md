@@ -1,75 +1,106 @@
-# Nuxt Minimal Starter
+# 🏠 Roommate Finder Web App
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A fullstack roommate and room-searching web app built with **Nuxt 3**, **Firebase**, **Node.js**, and **Google APIs** (Maps, Places, Routes). The app features intelligent matching for roommates and rooms, real-time chat functionality, and advanced distance and travel duration calculations.
 
-## Setup
+---
 
-Make sure to install dependencies:
+## 🚀 Key Features
+
+- **🔐 Authentication:**
+
+  - Secure login with Firebase Authentication (email/password, Google Sign-In).
+
+- **🤝 Matching System:**
+
+  - Matches **roommates to roommates** and **roommates to rooms** based on user preferences.
+  - Advanced scoring system ensuring relevant and accurate matches.
+
+- **💬 Real-Time Chat:**
+
+  - Instant messaging using Firebase real-time database.
+  - Real-time notifications and live chat updates.
+
+- **🗺️ Distance & Travel Duration:**
+
+  - Calculates precise distances and durations (car, public transit, walking) using Google Routes API.
+  - Interactive maps for room location visualization powered by Google Maps & Places API.
+
+---
+
+## 🌐 Tech Stack
+
+- **Frontend:** Nuxt 3 (Vue.js Composition API)
+- **Backend:** Node.js & Firebase Cloud Functions
+- **Database:** Firestore
+- **Authentication:** Firebase Auth
+- **APIs:** Google Maps, Google Places, Google Routes
+
+---
+
+## 📂 Project Structure
+
+```
+roommate-finder/
+├── components/         # Vue components
+├── pages/              # Nuxt pages and routing
+├── composables/        # Reusable logic
+├── utils/              # Helper functions
+├── firebase/           # Firebase config
+├── functions/          # Firebase Cloud Functions
+└── assets/             # Images and icons
+```
+
+---
+
+## ⚙️ Setup & Installation
+
+### Prerequisites
+
+- Node.js (v18 or higher recommended)
+- Firebase CLI
+- Google API credentials
+
+### Installation Steps
+
+Clone this repository:
 
 ```bash
-# npm
+git clone https://github.com/your-username/roommate-finder.git
+cd roommate-finder
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+Set up your `.env` file with your credentials:
 
-Start the development server on `http://localhost:3000`:
+```env
+NUXT_FIREBASE_API_KEY=your_firebase_api_key
+NUXT_FIREBASE_PROJECT_ID=your_project_id
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+```
+
+Run the development server:
 
 ```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
-
-Build the application for production:
+Deploy Firebase Functions:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+cd functions
+npm install
+firebase deploy --only functions
 ```
 
-Locally preview production build:
+---
 
-```bash
-# npm
-npm run preview
+## 📸 Screenshots
 
-# pnpm
-pnpm preview
+*(Add project screenshots here)*
 
-# yarn
-yarn preview
+---
 
-# bun
-bun run preview
-```
+## 📅 Future Improvements
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- Use AI for matching
+- Update filters

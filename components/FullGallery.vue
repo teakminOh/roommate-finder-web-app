@@ -18,7 +18,7 @@
             >
               <path d="M15 18l-6-6 6-6"/>
             </svg>
-            <span>Back</span>
+            <span>Späť</span>
         </button>
         <!-- Gallery Grid -->
         <div id="fullGalleryGrid" class="grid grid-cols-2 gap-2 pt-4">

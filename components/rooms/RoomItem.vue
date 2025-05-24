@@ -1,15 +1,14 @@
 <template>
   <div 
-    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 relative cursor-pointer transform hover:-translate-y-2 w-96"
+    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl relative cursor-pointer w-96"
     @mouseenter="showArrows = true"
     @mouseleave="showArrows = false"
     @click="isModalOpen = true"
   >
     <!-- Favorite Button -->
     <FavoriteRoom
-      :modelValue="isFavorited(props.room)"
+      v-model="favoriteStatus"
       :room="props.room"
-      @update:modelValue="updateFavoriteStatus"
       class="absolute top-3 right-3 z-10"
     />
 
@@ -51,7 +50,7 @@
         </h2>
         
       </div>
-      <span class="text-blue-600 font-semibold text-lg">{{ props.room.budget }}€</span>
+      <span class="text-blue-800 font-semibold text-lg">{{ props.room.budget }}€</span>
 
       <p class="text-gray-600 text-sm italic line-clamp-3 h-12 overflow-hidden">
         {{ truncateText(props.room.aboutProperty, 100) }}
@@ -78,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import FavoriteRoom from './FavoriteRoom.vue';
 import RoomModal from '~/components/rooms/RoomModal.vue';
 import { useFavorites } from '~/composables/useFavorites';
@@ -88,19 +87,31 @@ const props = defineProps<{
   room: Room;
 }>();
 
-const { favorites } = useFavorites();
+const { isFavorited, favorites } = useFavorites();
 
 const currentImageIndex = ref(0);
 const showArrows = ref(false);
 const isModalOpen = ref(false);
 
-const isFavorited = (room: Room) => {
-  return favorites.value?.some(fav => fav.room.id === room.id) ?? false;
-};
+// Use a ref for the favorite status
+const favoriteStatus = ref(false);
 
-const updateFavoriteStatus = (newStatus: boolean) => {
-  // Additional actions can be handled here if needed
-};
+// Set initial favorite status
+onMounted(() => {
+  updateFavoriteStatus();
+});
+
+// Watch for changes in favorites collection
+watch(favorites, () => {
+  updateFavoriteStatus();
+});
+
+// Function to update favorite status
+function updateFavoriteStatus() {
+  if (props.room && props.room.id) {
+    favoriteStatus.value = isFavorited(props.room);
+  }
+}
 
 const truncateText = (text: string, maxLength: number): string => {
   if (!text) return ''; // Handle undefined or null text
@@ -109,11 +120,13 @@ const truncateText = (text: string, maxLength: number): string => {
 };
 
 const prevImage = () => {
+  if (!props.room.images || !props.room.images.length) return;
   currentImageIndex.value =
     (currentImageIndex.value - 1 + props.room.images.length) % props.room.images.length;
 };
 
 const nextImage = () => {
+  if (!props.room.images || !props.room.images.length) return;
   currentImageIndex.value = (currentImageIndex.value + 1) % props.room.images.length;
 };
 </script>

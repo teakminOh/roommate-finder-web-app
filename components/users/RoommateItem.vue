@@ -1,29 +1,28 @@
 <template>
   <div 
-    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 relative cursor-pointer transform hover:-translate-y-2 w-96"
+    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl relative cursor-pointer w-96"
     @mouseenter="showArrows = true"
     @mouseleave="showArrows = false"
     @click="isModalOpen = true"
   >
     <!-- Favorite Button -->
     <FavoriteRoommate
-      :modelValue="isFavorited(props.roommate)"
+      v-model="favoriteStatus"
       :roommate="props.roommate"
-      @update:modelValue="updateFavoriteStatus"
       class="absolute top-3 right-3 z-10"
     />
 
     <!-- Image Carousel -->
     <div class="relative">
       <img
-        :src="props.roommate.images && props.roommate.images.length > 0 ? props.roommate.images[currentImageIndex] : '/images/placeholder.jpg'"
+        :src="props.roommate.images && props.roommate.images.length > 0 ? props.roommate.images[currentImageIndex] : '~/public/images/placeholder.jpg'"
         alt="Roommate Image"
         class="w-full h-64 object-cover rounded-t-xl"
       />
       
       <!-- Navigation Arrows -->
       <button
-        v-if="showArrows && props.roommate.images.length > 1"
+        v-if="showArrows && props.roommate.images && props.roommate.images.length > 1"
         @click.stop="prevImage"
         class="absolute left-2 top-1/2 bg-gray-800/70 text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
       >
@@ -33,7 +32,7 @@
       </button>
 
       <button
-        v-if="showArrows && props.roommate.images.length > 1"
+        v-if="showArrows && props.roommate.images && props.roommate.images.length > 1"
         @click.stop="nextImage"
         class="absolute right-2 top-1/2 bg-gray-800/70 text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
       >
@@ -49,7 +48,7 @@
         <h2 class="text-xl font-bold text-gray-800">{{ props.roommate.firstName }}</h2>
         
       </div>
-      <span class="text-blue-600 font-semibold text-lg">{{ props.roommate.budget }}€</span>
+      <span class="text-blue-800 font-semibold text-lg">{{ props.roommate.budget }}€</span>
 
       <p class="text-gray-600 text-sm italic line-clamp-3 h-12 overflow-hidden">
         {{ truncateText(props.roommate.bio,100) }}
@@ -67,7 +66,7 @@
           <span>
             {{ props.roommate.student ? '🎓 Študent' : '' }}
           </span>
-          <span>📍 {{ props.roommate.location }}</span>
+          <span>📍 {{ truncateText(props.roommate.location,35) }}</span>
         </div>
       </div>
     </div>
@@ -82,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import FavoriteRoommate from './FavoriteRoommate.vue';
 import type { Roommate } from '~/types/user';
 import RoommateModal from './RoommateModal.vue';
@@ -94,32 +93,44 @@ const truncateText = (text: string, maxLength: number): string => {
   return text.slice(0, maxLength) + '...';
 };
 
-
-
 const props = defineProps<{
   roommate: Roommate;
 }>();
 
-const { favorites } = useFavorites();
+const { isFavorited, favorites } = useFavorites();
 
 const currentImageIndex = ref(0);
 const showArrows = ref(false);
 const isModalOpen = ref(false);
+const favoriteStatus = ref(false);
 
-const isFavorited = (roommate: Roommate) => {
-  return favorites.value?.some(fav => fav.roommate.firstName === roommate.firstName) ?? false;
-};
+// Set initial favorite status
+onMounted(() => {
+  updateFavoriteStatus();
+});
 
-const updateFavoriteStatus = (newStatus: boolean) => {
-  // Additional actions can be handled here if needed
-};
+// Watch for changes in favorites collection
+watch(favorites, () => {
+  updateFavoriteStatus();
+});
+
+// Function to update favorite status
+function updateFavoriteStatus() {
+  if (props.roommate && props.roommate.id) {
+    favoriteStatus.value = isFavorited(props.roommate);
+  }
+}
 
 const prevImage = () => {
+  if (!props.roommate.images || !props.roommate.images.length) return;
+  
   currentImageIndex.value =
     (currentImageIndex.value - 1 + props.roommate.images.length) % props.roommate.images.length;
 };
 
 const nextImage = () => {
+  if (!props.roommate.images || !props.roommate.images.length) return;
+  
   currentImageIndex.value = (currentImageIndex.value + 1) % props.roommate.images.length;
 };
 </script>

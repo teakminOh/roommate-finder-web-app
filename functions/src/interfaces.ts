@@ -18,6 +18,7 @@ export interface UserProfile extends BaseProfile {
     preferredAgeRange?: string; // e.g., "20-26"
     preferredGender?: string; // e.g., "Žena", "Muž", "Nezáleží"
     preferredMoveDate?: string; // e.g., "2025-09-10"
+    
 
     // Lifestyle & Habits
     isSmoker?: boolean;
@@ -32,7 +33,6 @@ export interface UserProfile extends BaseProfile {
     workHome?: string; // "Áno", "Nie"
     dayPreference?: string; // "Ranné vtáča", "Nočná sova", "Niečo medzi" - Could compare similarity
 
-    // Pets
     hasPets?: boolean; // Overall flag
     hasCat?: boolean;
     hasDog?: boolean;
@@ -90,8 +90,8 @@ export interface RoomProfile extends BaseProfile {
 
 export interface BaseMatch {
     updatedAt: admin.firestore.Timestamp | admin.firestore.FieldValue;
-    score?: number; // Essential: The calculated compatibility score
-    distance?: number; // Optional: Still useful to store calculated distance
+    score: number; // Essential: The calculated compatibility score
+    distance:  number | null | undefined; // Optional: Still useful to store calculated distance
 }
 
 export interface UserUserMatch extends BaseMatch {

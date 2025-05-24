@@ -1,130 +1,105 @@
 <template>
-  <div class="mt-20">
-    <!-- Loading State -->
-    <div v-if="loading" class="text-center text-gray-500">
+  <div >
+    <!-- Use pending/error from composable -->
+    <div v-if="pending && (!rooms || rooms.length === 0)" class="text-center text-gray-500 py-10"> <!-- Show loading if pending AND no rooms yet -->
       Načítavam izby...
     </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center text-red-500">
-      {{ error }}
+    <div v-else-if="error" class="text-center text-red-500 py-10">
+       Chyba pri načítaní: {{ error.message }}
+    </div>
+    <div v-else-if="!rooms || rooms.length === 0" class="text-center text-gray-600 py-10">
+        Nenašli sa žiadne izby zodpovedajúce filtrom.
     </div>
 
-    <div
-      v-else
-      id="list"
-      class="flex items-center flex-wrap gap-6"
-    >
-      <div
-        v-for="room in rooms"
-        :key="room.id"
-        class="flex-none"
-      >
+    <!-- Iterate over rooms from composable -->
+    <div v-else id="list" class="flex items-center justify-center flex-wrap gap-6">
+      <div v-for="room in rooms" :key="room.id" class="flex-none">
         <RoomItem :room="room" />
       </div>
     </div>
 
-
-
-    <!-- Pagination Controls -->
-    <div class="flex items-center justify-center space-x-4 mt-4">
+    <!-- Pagination Controls (use functions/state from composable) -->
+    <div v-if="rooms && rooms.length > 0" class="flex items-center justify-center space-x-4 mt-8 mb-4">
       <button
-        @click="goToPreviousPage"
-        :disabled="currentPage === 1"
-        class="px-3 py-1 border rounded disabled:opacity-50"
+        @click="loadPreviousPage"
+        :disabled="currentPage === 1 || pending"
+        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        Previous
+        Predchádzajúca
       </button>
-      <span>Page {{ currentPage }}</span>
+      <span class="text-sm text-gray-600">Strana {{ currentPage }}</span>
       <button
-        @click="goToNextPage"
-        :disabled="!hasNextPage"
-        class="px-3 py-1 border rounded disabled:opacity-50"
+        @click="loadNextPage"
+        :disabled="!hasNextPage || pending"
+        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        Next
+        Nasledujúca
       </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, toRef, type Ref, watch } from 'vue'; // Added watch
 import type { Room } from '~/types/room';
 import RoomItem from './RoomItem.vue';
+import type { Filters as FilterPayload } from '../RoomFilter.vue'; // Adjusted path if RoomFilter is in components/
+import { useFilteredRooms } from '~/composables/useFilteredRooms';
+import type { GeoPoint } from 'firebase/firestore';
 
-const rooms = ref<Room[]>([]);
-const currentPage = ref(1);
-const loading = ref(true);
-const error = ref<string | null>(null);
-// Flag to indicate if there is a next page based on the API response.
-const hasNextPage = ref(false);
+// --- Props ---
+const props = defineProps<{
+  filters: Partial<FilterPayload>;
+  centerGeoPoint: GeoPoint | null;
+  searchRadiusKm: number;
+  searchAddress: string | null; // Optional, for context
+}>();
 
-// Object to store pagination cursors for each page.
-// For page 1, no cursor is needed.
-const pageTokens = ref<Record<number, string | null>>({ 1: null });
+// --- Emits ---
+const emit = defineEmits<{
+  (e: 'rooms-updated', rooms: Room[]): void; // Event to send updated (filtered) rooms to parent
+}>();
 
-const route = useRoute();
-const address = (route.query.address as string) || '';
+// --- Internal State for Pagination (Managed by RoomList for its instance of useFilteredRooms) ---
+const listCurrentPage = ref(1);
+const listPageStartCursors = ref<Record<number, unknown>>({ 1: null });
+const listLoadPaginated = ref(true); // RoomList instance of useFilteredRooms needs pagination
 
-const fetchPage = async (page: number) => {
-  loading.value = true;
-  error.value = null;
-  currentPage.value = page;
+// --- Use the Composable ---
+const {
+    rooms,          // This is the reactive list of rooms from the composable
+    pending,
+    error,
+    currentPage,    // This is the reactive currentPage managed by the composable
+    hasNextPage,
+    loadNextPage,
+    loadPreviousPage
+} = useFilteredRooms(
+    toRef(props, 'filters'),
+    listLoadPaginated,
+    listCurrentPage,
+    listPageStartCursors,
+    toRef(props, 'centerGeoPoint'), // No need for 'as Ref<...>' if types are good
+    toRef(props, 'searchRadiusKm')  // No need for 'as Ref<...>'
+);
 
-  try {
-    const url = new URL('http://localhost:3001/rooms');
-    url.searchParams.append('limit', '10');
-
-    // For pages greater than 1, use the stored cursor from the previous page.
-    if (page > 1) {
-      // Use the token stored for this page if available,
-      // otherwise fall back to the token from the previous page.
-      const token = pageTokens.value[page] || pageTokens.value[page - 1];
-      if (token) {
-        url.searchParams.append('lastDocId', token);
-      }
-    }
-
-    // Optionally include the address parameter.
-    if (address) {
-      url.searchParams.append('address', address);
-    }
-
-    const response = await fetch(url.toString());
-    if (!response.ok) throw new Error('Failed to fetch rooms');
-
-    const data = await response.json();
-    rooms.value = data.rooms || [];
-
-    // If a nextPageToken is provided, store it for the next page.
-    if (data.nextPageToken) {
-      pageTokens.value[page + 1] = data.nextPageToken;
-      hasNextPage.value = true;
-    } else {
-      hasNextPage.value = false;
-    }
-  } catch (err) {
-    error.value =
-      (err as Error).message || 'An unknown error occurred.';
-  } finally {
-    loading.value = false;
+// --- Watch the 'rooms' data from the composable ---
+// When it changes (due to filters, geo-params, or pagination), emit an event to the parent.
+watch(rooms, (newRoomsData) => {
+  if (newRoomsData) { // newRoomsData will be the array of Room objects
+    console.log("RoomList.vue: 'rooms' ref updated, emitting 'rooms-updated' with count:", newRoomsData.length);
+    emit('rooms-updated', newRoomsData);
+  } else {
+    // Handle case where newRoomsData might be null or undefined if composable could return that
+    console.log("RoomList.vue: 'rooms' ref updated to a falsy value, emitting empty array.");
+    emit('rooms-updated', []);
   }
-};
-
-const goToNextPage = () => {
-  if (hasNextPage.value) {
-    fetchPage(currentPage.value + 1);
-  }
-};
-
-const goToPreviousPage = () => {
-  if (currentPage.value > 1) {
-    fetchPage(currentPage.value - 1);
-  }
-};
-
-onMounted(() => {
-  fetchPage(1);
+}, {
+  immediate: true, // Emit the initial state once rooms are fetched (or if initially empty)
+  deep: false      // Watching the ref itself is enough; `rooms` is a shallowRef of an array.
+                   // If items within the array could change reactively and you needed to detect that,
+                   // then deep: true would be for watching props.filters if it's a complex object.
+                   // Here, we're watching the `rooms` ref provided by the composable.
 });
+
 </script>

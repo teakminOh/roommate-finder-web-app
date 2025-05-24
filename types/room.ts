@@ -1,3 +1,5 @@
+import type { GeoPoint } from "firebase-admin/firestore";
+
 export interface Room {
   id: string;
   propertyType: string;
@@ -13,6 +15,8 @@ export interface Room {
   catFriendly: boolean;
   childrenFriendly: boolean;
   completedProfile: boolean;
+  phoneNumber?: string;
+  coordinates?: GeoPoint;
   dogFriendly: boolean;
   email: string;
   internetIncluded: boolean;

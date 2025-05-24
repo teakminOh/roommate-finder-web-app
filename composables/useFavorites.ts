@@ -1,30 +1,12 @@
 import { ref } from 'vue'
 import { useFirestore, useCollection, useCurrentUser } from 'vuefire'
 import { collection, doc, query, where, setDoc, deleteDoc } from 'firebase/firestore'
+import type { Roommate } from '@/types/user'
+import type { Room } from '@/types/room'
 
-// Updated Roommate interface with an id field
-export interface Roommate {
-  id: string;
-  firstName: string;
-  bio: string;
-  budget: string;
-  gender: string;
-  images: string[];
-}
 
-// New Room interface for room data
-export interface Room {
-  id: string;
-  propertyType: string;
-  aboutProperty: string;
-  availableFrom: string;
-  bathroomType: string;
-  budget: number;
-  location: string;
-  images: string[];
-  // additional room-specific fields can be added here
-}
-
+export type { Roommate } from '@/types/user'
+export type { Room } from '@/types/room'
 // A union type so that favorites can be either a Roommate or a Room
 export type FavoriteItem = Roommate | Room;
 

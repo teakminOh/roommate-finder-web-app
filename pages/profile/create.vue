@@ -168,36 +168,13 @@
         </div>
 
       </form>
-
-      <!-- Social Sign-Up Options -->
-      <div class="mt-6">
-        <div class="relative">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-300"></div>
-          </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-white text-gray-500">Alebo sa registrujte pomocou</span>
-          </div>
-        </div>
-
-        <div class="mt-6">
-          <button
-            @click="signInWithGoogle"
-            type="button"
-            class="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-          >
-            <img src="/public/images/google-icon.svg" alt="Google" class="w-5 h-5 mr-2" />
-            Google
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword} from 'firebase/auth'
+import { createUserWithEmailAndPassword} from 'firebase/auth'
 import { useFirebaseAuth, useFirestore } from 'vuefire'
 import { FirebaseError } from 'firebase/app'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
@@ -227,20 +204,7 @@ const error = ref('')
 const loading = ref(false)
 const verificationSent = ref(false)
 
-// Updated computed property to include new field
-
-async function signInWithGoogle() {
-  try {
-    loading.value = true
-    await signInWithPopup(auth, new GoogleAuthProvider())
-    navigateTo("/")
-  } catch (err) {
-    error.value = 'Google registrácia zlyhala. Skúste znova.'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
+// Updated computed property to include new fiel
 
 async function signup() {
   if (import.meta.server) return

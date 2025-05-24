@@ -1,6 +1,5 @@
 <template>
   <div class="container mx-auto m-6 mt-16">
-    <!-- <h1 class="text-2xl text-center font-bold m-8">Nájdi si domov!</h1> -->
     <div v-if="loading" class="text-center text-gray-500">Loading preview roommates...</div>
     <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
     <div v-else class="flex flex-wrap justify-center items-center gap-6">

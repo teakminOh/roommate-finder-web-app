@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   css: ['~/assets/main.scss',],
   runtimeConfig: {
     googleCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    public: {
+
+    googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    }
   },
   postcss: {
     plugins: {
@@ -20,9 +24,11 @@ export default defineNuxtConfig({
       ],
       script: [
         {
-          src: `https://maps.googleapis.com/maps/api/js?key=${process.env.NUXT_GOOGLE_MAPS_API_KEY}&loading=async&libraries=places`,
-          async: true, // Load the script asynchronously
-          defer: true, // Defer script execution until the page has been parsed
+          // Make sure the key ENV var is correct!
+          src: `https://maps.googleapis.com/maps/api/js?key=${process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY}&loading=async&libraries=maps,marker,routes,places`, // <-- ADD ALL LIBRARIES HERE
+          async: true,
+          defer: true,
+          id: '__googleMapsScriptGlobal' // Optional: Add an ID for clarity
         },
         {
           src: 'https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.js'

@@ -224,6 +224,28 @@
             </div>
           </div>
         </div>
+        <div v-if="user" class="mt-6 pt-6 border-t">
+            <div v-if="isLoadingCurrentUser" class="text-center text-gray-500">Loading your location...</div>
+            <TravelTimeEstimator
+                v-else-if="originCoords && destinationCoords"
+                :origin-coords="originCoords"
+                :destination-coords="destinationCoords"
+                :api-key="''"
+            />
+            <div v-else-if="!originCoords" class="text-center text-xs text-gray-400">
+                Could not load your location for travel estimates. Ensure your profile has coordinates.
+            </div>
+              <div v-else-if="!destinationCoords" class="text-center text-xs text-gray-400">
+                Travel estimates unavailable (destination coordinates missing).
+            </div>
+        </div>
+        <div v-if="user" class="mt-6 h-full flex flex-col">
+          <ChatWindow
+            :other-user-id="room.id"
+            :other-user-name="room.email"
+            class="flex-grow min-h-0"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -236,67 +258,192 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue'; // Import watch
+import { useCurrentUser, useFirestore } from 'vuefire'; // Import useCurrentUser and useFirestore
+import { doc, getDoc } from 'firebase/firestore'; // Import getDoc and doc
+
+// Import Components
 import FullGallery from '../FullGallery.vue';
-import AmenityItem from '~/components/rooms/AmenityItem.vue';
+import AmenityItem from '~/components/rooms/AmenityItem.vue'; // Assuming this is used in your template
+import TravelTimeEstimator from '~/components/TravelTimeEstimator.vue'; // Your estimator component
+import type { Roommate } from '~/types/user'; // Assuming you have a Roommate type defined
+// Import InfoItem if used
+// import InfoItem from './InfoItem.vue';
+
+// Import Types
 import type { Room } from '~/types/room';
 
-
 const props = defineProps<{
-  room: Room;
+  room: Room; // Expecting the full Room object
   isOpen: boolean;
 }>();
 
 const emit = defineEmits(['close']);
+
+// --- State ---
 const showFullGallery = ref(false);
 const processedImages = ref<Array<{ url: string; width: number; height: number }>>([]);
+// Removed showChatView as this modal is for Rooms, not user profiles with chat toggle
+// const showChatView = ref(false);
 
+// State for Current User and their profile (needed for origin coordinates)
+const isLoadingCurrentUser = ref(false);
+const currentRoommate = ref<Roommate | null>(null);
+
+// --- Firebase ---
+const user = useCurrentUser(); // Get reactive logged-in user state
+const db = useFirestore(); // Get Firestore instance
+
+// --- Computed Properties ---
 const displayedImages = computed(() => processedImages.value.slice(0, 5));
 
-const loadImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.src = url;
-  });
-};
-
-const formatDate = (date: Date | string | null | undefined): string => {
-  if (!date) return 'Neznámy dátum';
-  
-  try {
-    return new Intl.DateTimeFormat('sk-SK', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(new Date(date));
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Neplatný dátum';
-  }
-};
-
-onMounted(async () => {
-  // Process images to get their dimensions
-  if (props.room.images && props.room.images.length > 0) {
-    processedImages.value = await Promise.all(
-      props.room.images.map(async (url) => {
-        const dimensions = await loadImageDimensions(url);
-        return {
-          url,
-          ...dimensions
-        };
-      })
-    );
-  } else {
-    // Set to empty array if no images
-    processedImages.value = [];
-  }
+// Computed Coordinates for TravelTimeEstimator
+const originCoords = computed(() => {
+    const coords = currentRoommate.value?.coordinates; // Firestore GeoPoint
+    console.log("RoomModal - Current User Coords (GeoPoint Object):", coords);
+    // Access properties WITHOUT underscores
+    if (coords && typeof coords.latitude === 'number' && typeof coords.longitude === 'number') {
+         console.log("RoomModal - Creating Origin:", { latitude: coords.latitude, longitude: coords.longitude });
+        // Use .latitude and .longitude
+        return { latitude: coords.latitude, longitude: coords.longitude };
+    }
+     console.log("RoomModal - Origin Coords Invalid or Missing");
+    return null;
 });
+
+const destinationCoords = computed(() => {
+     const coords = props.room?.coordinates as any; // Cast to any temporarily to check both properties
+     console.log("RoomModal - Raw Room Coords Object:", coords);
+
+     let lat: number | undefined = undefined;
+     let lng: number | undefined = undefined;
+
+     // Try accessing standard properties first, then internal ones
+     if (coords && typeof coords.latitude === 'number') {
+         lat = coords.latitude;
+     } else if (coords && typeof coords._latitude === 'number') { // Check internal property
+         lat = coords._latitude;
+     }
+
+     if (coords && typeof coords.longitude === 'number') {
+         lng = coords.longitude;
+     } else if (coords && typeof coords._longitude === 'number') { // Check internal property
+         lng = coords._longitude;
+     }
+
+      console.log(`RoomModal - Extracted Lat: ${lat} (type: ${typeof lat})`);
+      console.log(`RoomModal - Extracted Lng: ${lng} (type: ${typeof lng})`);
+
+
+     // Check if BOTH valid numbers were extracted
+     if (typeof lat === 'number' && typeof lng === 'number') {
+          console.log("RoomModal - Creating Destination:", { latitude: lat, longitude: lng });
+         // Return the standard { latitude, longitude } object
+         return { latitude: lat, longitude: lng };
+     }
+
+      console.log("RoomModal - Destination Coords Check FAILED after checking properties");
+     return null;
+});
+// --- Functions ---
+
+const loadImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => { // Added reject
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = (e) => {
+             console.error("Failed to load image for dimensions:", url, e);
+             reject(new Error(`Failed to load image: ${url}`));
+         };
+        img.src = url;
+    });
+};
+
+async function fetchCurrentRoommate(userId: string) {
+    if (!userId || currentRoommate.value?.id === userId) return; // Don't refetch if already loaded for same user
+
+    console.log("Fetching current user profile for coords...");
+    isLoadingCurrentUser.value = true;
+    const userRef = doc(db, 'users', userId); // Use correct 'users' collection name
+    try {
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+            // Make sure the Roommate type includes 'coordinates'
+            currentRoommate.value = { ...userSnap.data(), id: userSnap.id } as Roommate;
+            console.log("Current user profile loaded:", currentRoommate.value?.id);
+        } else {
+            console.warn("Current user profile not found in Firestore.");
+            currentRoommate.value = null;
+        }
+    } catch (error) {
+        console.error("Error fetching current user profile:", error);
+        currentRoommate.value = null;
+    } finally {
+        isLoadingCurrentUser.value = false;
+    }
+}
+
+const formatDate = (dateValue: any): string => { // Accept Date | string | Timestamp | null | undefined
+    if (!dateValue) return 'Neznámy dátum';
+    let date: Date | null = null;
+    try {
+        if (dateValue instanceof Date) {
+            date = dateValue;
+        } else if (typeof dateValue === 'string') {
+            date = new Date(dateValue);
+        } else if (typeof dateValue === 'object' && typeof dateValue.toDate === 'function') {
+            // Handle Firestore Timestamp
+            date = dateValue.toDate();
+        }
+
+        if (date && !isNaN(date.getTime())) { // Check if date is valid
+            return new Intl.DateTimeFormat('sk-SK', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }).format(date);
+        } else {
+            return 'Neplatný dátum';
+        }
+    } catch (error) {
+        console.error('Error formatting date:', error, dateValue);
+        return 'Chyba formátovania';
+    }
+};
 
 const closeModal = () => {
   emit('close');
 };
+
+// --- Watchers ---
+// Watch for user login/logout OR modal opening to fetch profile
+watch([user, () => props.isOpen], ([newUser, newIsOpen]) => {
+    if (newIsOpen && newUser) {
+        fetchCurrentRoommate(newUser.uid); // Fetch when modal opens AND user exists
+    }
+    if (!newUser) {
+        currentRoommate.value = null; // Clear profile on logout
+    }
+}, { immediate: true }); // Check immediately on component setup
+
+// --- Lifecycle Hooks ---
+onMounted(async () => {
+  // Process room images
+  if (props.room?.images && Array.isArray(props.room.images)) {
+      const imagePromises = props.room.images.map(async (url) => {
+        try {
+           const dimensions = await loadImageDimensions(url);
+           return { url, ...dimensions };
+        } catch (error) {
+           return { url, width: 0, height: 0 }; // Default on error
+        }
+      });
+      processedImages.value = await Promise.all(imagePromises);
+  } else {
+       processedImages.value = [];
+  }
+});
+
 </script>
 
 <style scoped>
