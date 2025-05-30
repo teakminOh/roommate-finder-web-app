@@ -24,8 +24,7 @@
                   <h2 class="text-xl font-semibold text-gray-800">Chaty</h2>
                  
                 </div>
-                
-                <!-- Search Bar -->
+            
                
               </div>
 
@@ -52,15 +51,7 @@
                 </div>
 
                 <!-- Empty State -->
-                <div v-else-if="displayableChats.length === 0" class="text-center py-12 px-6">
-                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-lg font-semibold text-gray-700 mb-2">Zatiaľ žiadne správy</h3>
-                  
-                </div>
+                
 
                 <!-- Chat List -->
                 <div v-else class="p-4 space-y-2">
@@ -159,18 +150,17 @@
                   />
                 </div>
               </div>
-              
-              <!-- No Chat Selected -->
-              <div v-else-if="user && !selectedChatUserId && !isLoading" class="h-full flex items-center justify-center">
-                <div class="text-center p-6">
-                  <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              <div v-else-if="displayableChats.length === 0" class="text-center py-12 px-6">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
                     </svg>
                   </div>
-                 
+                  <h3 class="text-lg font-semibold text-gray-700 mt-4">Zatiaľ žiadne správy</h3>
+                  
                 </div>
-              </div>
+              
+              
               
               <!-- Not Logged In -->
         
@@ -186,7 +176,7 @@
 import { ref, computed, watch, shallowRef } from 'vue';
 import { useCurrentUser, useFirestore, useCollection } from 'vuefire';
 import {
-  collection, query, where, orderBy, limit, documentId, getDocs,
+  collection, query, where, orderBy, limit, documentId, getDocs, Firestore,
   type DocumentData
 } from 'firebase/firestore';
 import { useRouter } from 'vue-router';
@@ -209,6 +199,7 @@ interface ChatParticipantInfo {
   id: string;
   firstName?: string;
   profileImage?: string | null;
+   type: 'user' | 'room';
 }
 
 interface ChatListItem {
@@ -252,35 +243,90 @@ const chatsQuery = computed(() => {
 // Reactive chat collection
 const { data: rawChats, pending: chatsPending, error: chatsError } = useCollection(chatsQuery);
 
-// Fetch profile data for chat participants
-async function fetchParticipantProfiles(userIds: string[]): Promise<Record<string, ChatParticipantInfo | null>> {
-  if (!userIds?.length) return {};
-  
-  const uniqueIds = [...new Set(userIds)];
-  const profiles: Record<string, ChatParticipantInfo | null> = {};
-  
-  try {
-    const q = query(collection(db, 'users'), where(documentId(), 'in', uniqueIds));
-    const snapshot = await getDocs(q);
-    
-    snapshot.forEach(doc => {
-      if (doc.exists()) {
-        const data = doc.data();
-        let firstImage: string | null = null;
-        if (Array.isArray(data.images) && data.images.length > 0 && typeof data.images[0] === 'string') {
-            firstImage = data.images[0];
-        }
-        profiles[doc.id] = {
-          id: doc.id,
-          firstName: data.firstName ?? 'User',
-          profileImage: firstImage,
-        };
-      }
-    });
-  } catch (e) {
-    console.error('Error fetching profiles:', e);
+async function fetchParticipantProfiles(
+  db: Firestore, // Pass the Firestore instance
+  participantIds: string[]
+): Promise<Record<string, ChatParticipantInfo | null>> {
+  if (!participantIds?.length) {
+    return {};
   }
-  
+
+  const uniqueIds = [...new Set(participantIds)];
+  const profiles: Record<string, ChatParticipantInfo | null> = {};
+
+  // Initialize all requested IDs to null.
+  // This ensures every ID in participantIds has an entry in the result,
+  // even if it's not found in either collection.
+  uniqueIds.forEach(id => {
+    profiles[id] = null;
+  });
+
+  // --- Firestore 'in' query limit ---
+  // Firestore 'in' queries are limited to 30 items in the array for `in`, `not-in`, or `array-contains-any`.
+  // If uniqueIds.length can exceed this, you'll need to batch these queries.
+  // For simplicity, this example assumes the number of IDs is within the limit.
+  // If batching is needed, you'd split uniqueIds into chunks of 30 (or less).
+
+  const idsToQueryUsers = [...uniqueIds]; // Query all IDs against users first
+
+  // 1. Fetch from 'users' collection
+  if (idsToQueryUsers.length > 0) {
+    try {
+      const userQuery = query(collection(db, 'users'), where(documentId(), 'in', idsToQueryUsers));
+      const userSnapshot = await getDocs(userQuery);
+
+      userSnapshot.forEach(doc => {
+        if (doc.exists()) {
+          const data = doc.data();
+          let firstImage: string | null = null;
+          if (Array.isArray(data.images) && data.images.length > 0 && typeof data.images[0] === 'string') {
+            firstImage = data.images[0];
+          }
+          profiles[doc.id] = {
+            id: doc.id,
+            firstName: data.firstName ?? 'User',
+            profileImage: firstImage,
+            type: 'user',
+          };
+        }
+      });
+    } catch (e) {
+      console.error('Error fetching user profiles:', e);
+      // Depending on requirements, you might want to re-throw or handle differently
+    }
+  }
+
+  // 2. Identify IDs not found as users and try fetching them from 'rooms'
+  const idsNotYetFound = uniqueIds.filter(id => profiles[id] === null);
+
+  if (idsNotYetFound.length > 0) {
+    try {
+      const roomQuery = query(collection(db, 'rooms'), where(documentId(), 'in', idsNotYetFound));
+      const roomSnapshot = await getDocs(roomQuery);
+
+      roomSnapshot.forEach(doc => {
+        if (doc.exists()) {
+          const data = doc.data();
+          // For rooms, profileImage could be null or come from a similar 'images' field
+          let roomImage: string | null = null;
+          if (Array.isArray(data.images) && data.images.length > 0 && typeof data.images[0] === 'string') {
+            roomImage = data.images[0]; // Or data.roomImage, data.icon etc.
+          }
+
+          profiles[doc.id] = {
+            id: doc.id,
+            firstName: data.location ?? 'Room', // Use location for firstName
+            profileImage: roomImage, // Or consistently null if rooms don't have profile images
+            type: 'room',
+          };
+        }
+      });
+    } catch (e) {
+      console.error('Error fetching room profiles:', e);
+      // Handle error
+    }
+  }
+
   return profiles;
 }
 
@@ -309,7 +355,7 @@ watch(rawChats, async (chats) => {
     });
     
     if (neededProfileIds.size > 0) {
-      const newProfiles = await fetchParticipantProfiles(Array.from(neededProfileIds));
+      const newProfiles = await fetchParticipantProfiles(db, Array.from(neededProfileIds));
       participantCache.value = { ...currentCache, ...newProfiles };
     }
     
