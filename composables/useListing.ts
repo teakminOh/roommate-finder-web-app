@@ -20,7 +20,7 @@ import type { Listing, RoomListing, RoommateAdListing, FirestoreCompatibleDate }
 
 const INITIAL_FETCH_PER_SOURCE = 7; // Fetch this many initially from each
 const LOAD_MORE_FETCH_PER_SOURCE = 5; // Fetch this many more from each on "load more"
-const ITEMS_PER_PAGE_DISPLAY = 9;   // How many to show initially and add per "load more" click
+const ITEMS_PER_PAGE_DISPLAY = 8;   // How many to show initially and add per "load more" click
 
 export function useListings() {
   console.log("DEBUG: useListings: Composable instance created.");

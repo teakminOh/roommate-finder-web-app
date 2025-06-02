@@ -1,9 +1,10 @@
 // pages/search-rooms.vue
 <template>
   <div class="flex flex-col mt-16">
-    <div class="flex items-center gap-4 mt-4 mb-4 mx-4">
+    <!-- Search and Filter Controls -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-4 mb-4 mx-4">
       <LocationSearchInput
-        class="flex-1"
+        class="flex-1 min-w-0"
         :initial-address="initialAddressForComponent"
         :initial-radius="initialRadiusForComponent"
         :google-maps-api-key="googleMapsApiKey"
@@ -11,18 +12,46 @@
         @error="handleLocationComponentError"
       />
       <RoomFilter
-        class="flex-1"
+        class="flex-1 min-w-0"
         @filters-changed="handleFiltersChange"
         :initial-address="effectiveSearchAddress"
       />
     </div>
 
-    <div class="flex h-screen">
-      <!-- Use the new component -->
-    
-      <!-- Rest of your template for RoomFilter, RoomList, Map -->
-      <div class="w-1/2 px-4 overflow-y-auto">
-    
+    <!-- Mobile Toggle Buttons (visible only on mobile) -->
+    <div class="flex md:hidden mx-4 mb-4">
+      <button 
+        @click="activeView = 'list'"
+        :class="[
+          'flex-1 py-2 px-4 text-sm font-medium rounded-l-lg border',
+          activeView === 'list' 
+            ? 'bg-blue-500 text-white border-blue-500' 
+            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+        ]"
+      >
+        Room List
+      </button>
+      <button 
+        @click="activeView = 'map'"
+        :class="[
+          'flex-1 py-2 px-4 text-sm font-medium rounded-r-lg border-t border-r border-b',
+          activeView === 'map' 
+            ? 'bg-blue-500 text-white border-blue-500' 
+            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+        ]"
+      >
+        Map View
+      </button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex flex-col md:flex-row h-screen">
+      <!-- Room List Section -->
+      <div :class="[
+        'md:w-1/2 px-4 overflow-y-auto',
+        // Mobile visibility control and height
+        activeView === 'list' ? 'block flex-1' : 'hidden md:block'
+      ]">
         <RoomList
           :filters="activeFilters"
           :center-geo-point="effectiveCenterGeoPoint"
@@ -31,7 +60,13 @@
           @rooms-updated="handleRoomsUpdateForMap"
         />
       </div>
-      <div class="w-1/2 bg-gray-200">
+      
+      <!-- Map Section -->
+      <div :class="[
+        'md:w-1/2 bg-gray-200',
+        // Mobile visibility control and height
+        activeView === 'map' ? 'block flex-1 min-h-[500px]' : 'hidden md:block'
+      ]">
         <Map
           :api-key="googleMapsApiKey"
           :rooms-to-display="roomsForMap"
@@ -69,6 +104,9 @@ definePageMeta({
 
 const route = useRoute();
 const router = useRouter();
+
+// --- Mobile View State ---
+const activeView = ref<'list' | 'map'>('list');
 
 // --- State for LocationSearchInput component props ---
 const initialAddressForComponent = ref('');

@@ -3,38 +3,55 @@
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
       <!-- Progress Indicator -->
       <div class="bg-gray-100 px-6 py-4 border-b">
-        <div class="flex items-center justify-between">
-          <div 
-            v-for="(step, index) in steps" 
-            :key="index" 
-            class="flex-1 text-center relative"
+        <div class="flex items-center justify-between relative">
+          <div
+            v-for="(step, index) in steps"
+            :key="index"
+            class="flex flex-col items-center relative z-10"
+            :class="{ 'flex-1': index < steps.length - 1 }"
           >
-            <div 
-              class="inline-flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 
-              ${currentStep > index ? 'bg-blue-600 text-white' : 
-                currentStep === index ? 'bg-blue-500 text-white' : 
-                'bg-gray-300 text-gray-600'}"
+            <!-- Step Circle -->
+            <div
+              class="inline-flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 font-semibold"
+              :class="{
+                'bg-blue-600 text-white shadow-lg': currentStep === index,
+                'bg-green-600 text-white': currentStep > index,
+                'bg-gray-300 text-gray-600': currentStep < index
+              }"
             >
-              {{ index + 1 }}
+              <span v-if="currentStep > index">✓</span>
+              <span v-else>{{ index + 1 }}</span>
             </div>
-            <div class="text-xs mt-2 text-gray-700">
+
+            <!-- Step Label -->
+            <div
+              class="text-xs mt-2 font-medium transition-colors duration-300 text-center"
+              :class="{
+                'text-blue-600': currentStep === index,
+                'text-green-600': currentStep > index,
+                'text-gray-500': currentStep < index
+              }"
+            >
               {{ step }}
             </div>
-            
+
             <!-- Connecting Line -->
-            <div 
-              v-if="index < steps.length - 1" 
-              class="absolute top-5 left-1/2 w-full -translate-x-1/2 -z-10"
-            >
-              <div 
-                class="h-1 transition-all duration-300"
-                :class="{
-                  'bg-blue-600': currentStep > index,
-                  'bg-gray-300': currentStep <= index
-                }"
-              ></div>
-            </div>
+            <div
+              v-if="index < steps.length - 1"
+              class="absolute top-5 left-full w-full h-0.5 transition-all duration-300 -z-10"
+              :class="{
+                'bg-green-600': currentStep > index,
+                'bg-gray-300': currentStep <= index
+              }"
+              style="transform: translateX(-50%);"
+            ></div>
           </div>
+        </div>
+
+        <!-- Current Step Indicator -->
+        <div class="mt-4 text-center">
+          <span class="text-sm text-gray-600">Krok {{ currentStep + 1 }} z {{ steps.length }}: </span>
+          <span class="text-sm font-semibold text-blue-600">{{ steps[currentStep] }}</span>
         </div>
       </div>
 
@@ -66,7 +83,6 @@
               type="text"
               oninput="this.value = this.value.replace(/\D/g, '')"
               inputmode="numeric"
-              required
               class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -105,7 +121,6 @@
               id="occupation"
               v-model="occupation"
               type="text"
-              required
               class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -485,7 +500,10 @@
           </div>
           <FileUploader ref="fileUploader" />
         </div>
-
+         <!-- Step Validation Error Message -->
+         <div v-if="stepValidationError" class="text-red-600 text-sm mt-4 p-3 bg-red-50 border border-red-300 rounded-md">
+          {{ stepValidationError }}
+        </div>
         <!-- Navigation Buttons -->
         <div class="flex justify-between mt-6">
           <button 
@@ -507,12 +525,17 @@
           </button>
           
           <button 
-            v-if="currentStep === steps.length - 1" 
-            type="submit" 
-            class="ml-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            Uložiť profil
-          </button>
+  v-if="currentStep === steps.length - 1" 
+  type="submit" 
+  :disabled="loading"
+  @click="handleSubmit"
+  :class="[
+    'ml-auto px-4 py-2 rounded-md text-white',
+    loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+  ]"
+>
+  Uložiť profil
+</button>
         </div>
       </form>
     </div>
@@ -527,23 +550,21 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router' // Added useRouter for navigateTo
+import { ref, computed } from 'vue'
 import { doc, setDoc } from 'firebase/firestore'
 import { useFirestore, getCurrentUser } from 'vuefire'
 import schools from '~/src/data/schools.json'
 import FileUploader from '~/components/sell/FileUploader.vue'
 
 const route = useRoute()
+const router = useRouter() // Added for navigateTo
 const user = await getCurrentUser()
 const db = useFirestore()
 
-// Use the UID from route params, or fall back to the current user's UID
 const uid = route.params.uid as string || user?.uid
 
-// Define steps
 const steps = [
   'Základné info', 
   'Životný štýl', 
@@ -551,13 +572,13 @@ const steps = [
   'O mne'
 ]
 
-// Current step tracking
 const currentStep = ref(0)
+const stepValidationError = ref(''); // For step-specific validation errors
 
 const fileUploader = ref<InstanceType<typeof FileUploader>>()
 
 const age = ref<number | null>(null)
-const phoneNumber = ref<number | null>(null)
+const phoneNumber = ref(''); // Changed to string, initialized to empty
 const occupation = ref('')
 const firstName = ref('')
 const isSmoker = ref(false)
@@ -580,18 +601,14 @@ const alcoholUse = ref('')
 const preferredGender = ref('')
 const preferredAgeRange = ref('')
 
-
-
 const hasDog = ref(false)
 const hasCat = ref(false)
 const hasPets = ref(false)
-const hasOtherPets = ref(false)
-const childrenStatus = ref('')  // default to no_children
+const hasOtherPets = ref(false) // This was in submitProfile but not in refs, added for consistency
+const childrenStatus = ref('Nemám deti'); // Initialized with a default valid value
 
 const bio = ref('')
 
-      // "YYYY-MM-DD" 
-// const hasChildren = ref(false)
 const isGroup = ref(false)
 const groupMembers = ref<string[]>([])
 
@@ -613,20 +630,59 @@ const maxMoveDate = computed(() => {
 const loading = ref(false)
 const success = ref(false)
 const error = ref('')
-// Navigation methods
+
+
+// Validation Functions
+const validateStep0 = (): string => {
+  if (!firstName.value.trim()) return "Krstné meno je povinné."; 
+  if (!preferredMoveDate.value) return "Preferovaný dátum nasťahovania je povinný.";
+  if (age.value === null) return "Vek je povinný.";
+  if (age.value < 18 || age.value > 120) return "Vek musí byť medzi 18 a 120.";
+  if (!childrenStatus.value) return "Výber statusu detí je povinný."; // Should always be filled due to initialization
+  return ""; // No error
+};
+
+const validateStep1 = (): string => {
+  if (student.value) {
+    if (!selectedSchool.value) return "Výber školy je povinný, ak ste študent.";
+    if (!selectedFaculty.value) return "Výber fakulty je povinný, ak ste študent.";
+    if (!studyProgram.value.trim()) return "Odbor štúdia je povinný, ak ste študent.";
+  }
+  // No specific validation for group members or pets for *advancing* step
+  return ""; // No error
+};
+
+// Step 2 (Moje Bývanie) does not have 'required' fields for advancing based on current HTML
+// Step 3 (O Mne) - bio is required for submission, not for a "Next" button from this step
+
 // Navigation methods
 const nextStep = () => {
+  stepValidationError.value = ''; // Clear previous errors
+
+  let errorMessage = "";
+  if (currentStep.value === 0) {
+    errorMessage = validateStep0();
+  } else if (currentStep.value === 1) {
+    errorMessage = validateStep1();
+  }
+  // Add more else if blocks here for other steps if they get required fields for advancing
+
+  if (errorMessage) {
+    stepValidationError.value = errorMessage;
+    return; // Stop advancement
+  }
+
   if (currentStep.value < steps.length - 1) {
-    currentStep.value++
+    currentStep.value++;
   }
 }
 
 const prevStep = () => {
+  stepValidationError.value = ''; // Clear errors when going back
   if (currentStep.value > 0) {
-    currentStep.value--
+    currentStep.value--;
   }
 }
-
 
 function addGroupMember() {
   groupMembers.value.push('')
@@ -636,42 +692,97 @@ function removeGroupMember(index: number) {
   groupMembers.value.splice(index, 1)
 }
 
+const handleSubmit = async () => {
+  stepValidationError.value = ''; // Clear step validation errors
+  error.value = ''; // Clear general submission errors
+
+  // Final validation for the last step's required fields (if any not covered by browser)
+  // For example, 'bio' is required. The `required` attribute on textarea will be caught by browser on `type="submit"`.
+  // If you want to be extra sure or have complex validation before submit:
+  if (currentStep.value === steps.length - 1) {
+      if (!bio.value.trim()) {
+          stepValidationError.value = "Krátky popis (O mne) je povinný.";
+          return;
+      }
+      // You could also check fileUploader.value?.files.length if an image is mandatory
+  }
+
+
+  loading.value = true
+  try {
+    await submitProfile() // submitProfile already handles its own logic
+  } catch (err) {
+    // submitProfile sets its own error.value, so this catch might be redundant
+    // unless submitProfile itself throws an error that it doesn't handle.
+    console.error("Error in handleSubmit:", err)
+    error.value = 'Vyskytla sa neočakávaná chyba pri odosielaní.';
+  } finally {
+    loading.value = false
+  }
+}
+
 async function submitProfile() {
   if (!uid) {
     error.value = 'Chýba používateľské ID.'
+    loading.value = false; // Ensure loading is false if we return early
     return
   }
+
+  // Re-validate all required fields before final submission
+  // This is a good practice even if individual steps are validated
+  const step0Error = validateStep0();
+  if (step0Error) {
+      error.value = `Chyba v Základných informáciách: ${step0Error}`;
+      currentStep.value = 0; // Optionally switch to the step with error
+      loading.value = false;
+      return;
+  }
+  const step1Error = validateStep1();
+  if (step1Error) {
+      error.value = `Chyba v Životnom štýle: ${step1Error}`;
+      currentStep.value = 1; // Optionally switch to the step with error
+      loading.value = false;
+      return;
+  }
+  if (!bio.value.trim()) {
+      error.value = "Krátky popis (O mne) je povinný.";
+      currentStep.value = 3; // Optionally switch to the step with error
+      loading.value = false;
+      return;
+  }
+
 
   loading.value = true
   error.value = ''
   success.value = false
 
   try {
-    // 1. Upload images first
+    console.log('Starting image upload...')
     await fileUploader.value?.handleProcess()
     
     const uploadedUrls = fileUploader.value?.uploadedUrls || []
+    console.log('Images uploaded successfully:', uploadedUrls.length)
 
-    // 2. Submit profile data along with image URLs
+    console.log('Saving profile to Firestore...')
     await setDoc(doc(db, 'users', uid), {
       firstName: firstName.value,
       age: age.value,
-      phoneNumber: phoneNumber.value,
+      phoneNumber: phoneNumber.value, // Stored as string, ensure backend handles it if number is needed
       preferredMoveDate: preferredMoveDate.value || null,
       occupation: occupation.value,
       isSmoker: isSmoker.value,
       hasPets: hasPets.value,
-      hasDog: hasDog.value,
-      hasCat: hasCat.value,
-      hasOtherPets: hasOtherPets.value,
+      hasDog: hasPets.value ? hasDog.value : false, // Only save pet details if hasPets is true
+      hasCat: hasPets.value ? hasCat.value : false, // Only save pet details if hasPets is true
+      hasOtherPets: hasPets.value ? hasOtherPets.value : false, // Only save pet details if hasPets is true
       bio: bio.value,
       childrenStatus: childrenStatus.value,
       isGroup: isGroup.value,
       groupMembers: isGroup.value ? groupMembers.value.filter(m => m.trim() !== '') : [],
       student: student.value,
-      selectedSchool: selectedSchool.value,
-      selectedFaculty: selectedFaculty.value,
-      studyProgram: studyProgram.value,
+      selectedSchool: student.value ? selectedSchool.value : '', // Only save student details if student is true
+      selectedFaculty: student.value ? selectedFaculty.value : '', // Only save student details if student is true
+      studyProgram: student.value ? studyProgram.value : '', // Only save student details if student is true
       bedTime: bedTime.value,
       wakeTime: wakeTime.value,
       dayPreference: dayPreference.value,
@@ -685,21 +796,22 @@ async function submitProfile() {
       alcoholUse: alcoholUse.value,
       preferredGender: preferredGender.value,
       preferredAgeRange: preferredAgeRange.value,
-      images: uploadedUrls, // ✅ store uploaded URLs here
+      images: uploadedUrls,
       completedProfile: true,
       updatedAt: new Date(),
     }, { merge: true });
 
+    console.log('Profile saved successfully!')
     success.value = true
+    
     setTimeout(() => {
-      navigateTo('/')
+      router.push('/') // Use router.push for navigation
     }, 1500)
   } catch (err) {
-    console.error(err)
-    error.value = 'Nepodarilo sa uložiť profil.'
+    console.error('Submit error:', err)
+    error.value = 'Nepodarilo sa uložiť profil. Skontrolujte zadané údaje a skúste to znova.'
   } finally {
     loading.value = false
   }
 }
 </script>
-

@@ -68,7 +68,7 @@
              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                 <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.wantsNonSmoker" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Hľadám nefajčiara</span>
+                  <span class="text-sm text-gray-700">Hľadám nefajčiara 🚭</span>
                 </label>
                 <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.wantsNoPets" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
@@ -76,7 +76,12 @@
                 </label>
                  <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.isStudent" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Študent</span>
+                  <span class="text-sm text-gray-700">Študent 🎓</span>
+                </label>
+                <!-- New Checkbox for isWorking -->
+                <label class="flex items-center space-x-2">
+                  <input type="checkbox" v-model="filters.isWorking" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
+                  <span class="text-sm text-gray-700">Zamestnaný 💼</span>
                 </label>
              </div>
           </div>
@@ -101,9 +106,6 @@ import { ref, reactive } from 'vue';
 
 const isOpen = ref(false);
 
-// Define the structure of the filters for Roommates
-// `isSmoker` and `hasPets` in the payload will be boolean.
-// `wantsNonSmoker` and `wantsNoPets` are UI state for the checkboxes.
 export interface FiltersState { // UI state for the form
   gender: string;
   minAge: number | null;
@@ -113,10 +115,9 @@ export interface FiltersState { // UI state for the form
   wantsNonSmoker: boolean; // True if user checks "Hľadám nefajčiara"
   wantsNoPets: boolean;    // True if user checks "Preferujem bez zvierat"
   isStudent: boolean;      // True if user checks "Študent"
+  isWorking: boolean;      // True if user checks "Zamestnaný"
 }
 
-// This is the structure of the object that will be EMITTED
-// It aligns with what the useFilteredRoommates composable expects for these fields
 export interface EmittedFilters {
   gender?: string;
   minAge?: number | null;
@@ -126,6 +127,7 @@ export interface EmittedFilters {
   isSmoker?: boolean;       // true (is a smoker), false (is not a smoker)
   hasPets?: boolean;        // true (has pets), false (does not have pets)
   student?: boolean;        // true (is a student)
+  isWorking?: boolean;      // true (is working, i.e. occupation !== 'Nezamestnaný'), false (is not working, i.e. occupation === 'Nezamestnaný')
 }
 
 
@@ -133,7 +135,6 @@ const emit = defineEmits<{
   (e: 'filters-changed', filters: Partial<EmittedFilters>): void
 }>();
 
-// Reactive object for the form's V-MODELS
 const filters = reactive<FiltersState>({
   gender: '',
   minAge: null,
@@ -143,9 +144,9 @@ const filters = reactive<FiltersState>({
   wantsNonSmoker: false,
   wantsNoPets: false,
   isStudent: false,
+  isWorking: false, // Initialize new filter state
 });
 
-// Function to create a payload with only the *set* filters
 const getActiveFiltersPayload = (): Partial<EmittedFilters> => {
   const payload: Partial<EmittedFilters> = {};
 
@@ -153,52 +154,45 @@ const getActiveFiltersPayload = (): Partial<EmittedFilters> => {
     payload.gender = filters.gender;
   }
 
-  if (filters.minAge !== null && filters.minAge >= 16) { // Assuming 16 is a reasonable minimum
+  if (filters.minAge !== null && filters.minAge >= 16) {
     payload.minAge = filters.minAge;
   }
   if (filters.maxAge !== null && filters.maxAge >= 16) {
     if (filters.minAge !== null && filters.maxAge < filters.minAge) {
-      // Optional: Handle invalid range, e.g., swap or clear maxAge
-      payload.maxAge = filters.minAge; // Or show an error
+      payload.maxAge = filters.minAge;
     } else {
       payload.maxAge = filters.maxAge;
     }
   }
-
-
+  
   if (filters.minBudget !== null && filters.minBudget >= 0) {
     payload.minBudget = filters.minBudget;
   }
   if (filters.maxBudget !== null && filters.maxBudget > 0) {
     if (filters.minBudget !== null && filters.maxBudget < filters.minBudget) {
-        payload.maxBudget = filters.minBudget; // Or show an error
+        payload.maxBudget = filters.minBudget;
     } else {
         payload.maxBudget = filters.maxBudget;
     }
   }
 
-  // Convert UI state to payload state
   if (filters.wantsNonSmoker) {
-    payload.isSmoker = false; // If user wants non-smoker, query for isSmoker: false
+    payload.isSmoker = false; 
   }
-  // If you also wanted a "Wants Smoker" checkbox, you'd add:
-  // else if (filters.wantsSmoker) { payload.isSmoker = true; }
-  // If neither is checked, `isSmoker` is omitted (meaning "any" for smoker status)
 
   if (filters.wantsNoPets) {
-    payload.hasPets = false; // If user wants no pets, query for hasPets: false
+    payload.hasPets = false;
   }
-  // If you also wanted a "Wants With Pets" checkbox, you'd add:
-  // else if (filters.wantsWithPets) { payload.hasPets = true; }
-  // If neither is checked, `hasPets` is omitted (meaning "any" for pet status)
 
-
-  if (filters.isStudent) { // This is a direct mapping
+  if (filters.isStudent) {
     payload.student = true;
   }
-  // If you wanted to filter for non-students:
-  // else if (filters.isNotStudent) { payload.student = false; }
 
+  // Add logic for the new isWorking filter
+  if (filters.isWorking) {
+    payload.isWorking = true; // This means we are looking for employed individuals
+                              // The consuming composable/backend will handle occupation !== 'Nezamestnaný'
+  }
 
   return payload;
 }
@@ -219,6 +213,7 @@ const resetFilters = () => {
   filters.wantsNonSmoker = false;
   filters.wantsNoPets = false;
   filters.isStudent = false;
+  filters.isWorking = false; // Reset new filter state
 
   console.log("Roommate Filters reset. Emitting empty object.");
   emit('filters-changed', {});

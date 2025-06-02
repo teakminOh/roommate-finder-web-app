@@ -73,31 +73,31 @@
              <div class="grid grid-cols-2 gap-x-4 gap-y-2">
                 <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.isFurnished" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Zariadená</span>
+                  <span class="text-sm text-gray-700">Zariadená 🛏️</span>
                 </label>
                 <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.parkingAvailable" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Parkovanie</span>
+                  <span class="text-sm text-gray-700">Parkovanie 🅿️</span>
                 </label>
                 <label class="flex items-center space-x-2"> <!-- childrenFriendly input -->
                   <input type="checkbox" v-model="filters.childrenFriendly" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Vhodné pre deti</span>
+                  <span class="text-sm text-gray-700">Vhodné pre deti 👦</span>
                 </label>
                 <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.petsAllowed" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Domáce zvieratá</span>
+                  <span class="text-sm text-gray-700">Domáce zvieratá 🐕</span>
                 </label>
                  <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.studentsWelcome" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Študenti vítaní</span>
+                  <span class="text-sm text-gray-700">Študenti vítaní 🎓</span>
                 </label>
                  <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.internetIncluded" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Internet v cene</span>
+                  <span class="text-sm text-gray-700">Internet v cene 🌐</span>
                 </label>
                  <label class="flex items-center space-x-2">
                   <input type="checkbox" v-model="filters.isAccessible" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-offset-0 focus:ring-indigo-200 focus:ring-opacity-50">
-                  <span class="text-sm text-gray-700">Bezbariérový prístup</span>
+                  <span class="text-sm text-gray-700">Bezbariérový prístup ♿</span>
                 </label>
              </div>
           </div>

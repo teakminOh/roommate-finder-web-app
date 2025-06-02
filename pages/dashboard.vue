@@ -80,26 +80,37 @@
             </div>
 
             <!-- Error State -->
-            <div v-else class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-8 shadow-lg">
-              <div class="flex items-start space-x-4">
-                <div class="flex-shrink-0">
-                  <div class="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-400 rounded-full flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                    </svg>
-                  </div>
-                </div>
-                <div class="flex-1">
-                  <h3 class="text-lg font-semibold text-slate-800 mb-2">Inzerát sa nepodarilo načítať</h3>
-                  <p class="text-slate-600 leading-relaxed">
-                    Zdá sa, že ste zaregistrovaný ako poskytovateľ (údaj 'firstName' nebol nájdený), ale inzerát izby priradený k vášmu účtu (ID: {{ user.uid }}) sa nepodarilo nájsť alebo načítať.
-                  </p>
-                  <pre v-if="roomError" class="mt-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 overflow-x-auto">
+            <div v-else class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg">
+  <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+    <!-- Icon -->
+    <div class="flex-shrink-0">
+      <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-orange-400 to-red-400 rounded-full flex items-center justify-center">
+        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
+          </path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Text content -->
+    <div class="flex-1">
+      <h3 class="text-base sm:text-lg font-semibold text-slate-800 mb-2">Inzerát sa nepodarilo načítať</h3>
+      <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
+        Zdá sa, že ste zaregistrovaný ako poskytovateľ (údaj 'firstName' nebol nájdený), ale inzerát izby priradený k vášmu účtu (ID: {{ user.uid }}) sa nepodarilo nájsť alebo načítať.
+      </p>
+      <NuxtLink :to="`/profile/complete-profile/${user.uid}`" class="text-blue-800 font-bold underline mt-2 inline-block">
+        Dokonči registráciu.
+      </NuxtLink>
+
+      <pre v-if="roomError"
+        class="mt-4 text-xs sm:text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 overflow-x-auto">
 Chyba: {{ roomError }}
-                  </pre>
-                </div>
-              </div>
-            </div>
+      </pre>
+    </div>
+  </div>
+</div>
+
           </div>
         </div>
       </section>

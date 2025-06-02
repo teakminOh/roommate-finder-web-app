@@ -166,7 +166,14 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:col-span-2">
           <EditableInfoItem icon="🔒" label="Súkromná Izba" v-model="editableListing.isPrivateRoom" :is-editing="isEditingDetails" inputType="checkbox" />
-          <EditableInfoItem icon="🛁" label="Kúpeľňa" v-model="editableListing.bathroomType" :is-editing="isEditingDetails" :options="['Súkromná', 'Zdieľaná']" />
+          <EditableInfoItem 
+  icon="🛁" 
+  label="Kúpeľňa" 
+  v-model="editableListing.bathroomType" 
+  :is-editing="isEditingDetails" 
+  input-type="select"
+  :options="['Súkromná kúpeľňa', 'Zdieľaná kúpeľňa']" 
+/>
           <EditableInfoItem icon="🛋️" label="Zariadená" v-model="editableListing.isFurnished" :is-editing="isEditingDetails" inputType="checkbox" />
         </div>
       </div>

@@ -1,17 +1,18 @@
 <template>
+  <Teleport to="body">
   <div
     v-if="isOpen"
-    class="fixed inset-0 bg-gradient-to-br from-gray-300/70 to-gray-400/70 flex justify-center items-center z-50 p-4 overflow-hidden"
+    class="fixed inset-0 bg-gradient-to-br from-gray-300/70 to-gray-400/70 flex justify-center items-center z-50 p-4 max-[424px]:p-0 overflow-hidden"
     @click="closeModal"
 >
     <div 
-      class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative" 
+      class="bg-white shadow-2xl w-full max-w-6xl max-h-[100vh] max-[424px]:max-w-none max-[424px]:h-full max-[424px]:max-h-none overflow-y-auto relative" 
       @click.stop
     >
       <!-- Back Button -->
       <button
         @click="$emit('close')"
-        class="absolute top-4 left-4 z-10 group flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200"
+        class="absolute top-4 left-4 z-10 group flex items-center text-gray-600 hover:text-blue-800 transition-colors duration-200"
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -142,7 +143,7 @@
         
         <div class="mt-6 bg-indigo-50 rounded-xl p-6">
           <h3 class="text-2xl font-semibold text-blue-900 mb-4">Detaily a Preferencie</h3>
-            <div class="grid grid-cols-3 gap-3 text-gray-700">
+            <div class="grid grid-cols-3 max-[424px]:grid-cols-1 gap-3 text-gray-700">
               <InfoItem
                 emoji="🏠 Pracujem/Študujem z domu:"
                 :label="roommate.workHome"
@@ -173,7 +174,7 @@
         <div class="mt-6 bg-indigo-50 rounded-xl p-6">
           <!-- Detailed Preferences Section -->
           <h3 class="text-2xl font-semibold text-indigo-900 mb-4">Bytové Preferencie</h3>
-          <div class="grid grid-cols-3 gap-3 text-gray-700">
+          <div class="grid grid-cols-3 max-[424px]:grid-cols-1 gap-3 text-gray-700">
             <InfoItem 
               emoji="🏡" 
               :label="roommate.livingArrangement" 
@@ -204,7 +205,7 @@
         <!-- Pets and Additional Info -->
         <div class="mt-6 bg-green-50 rounded-xl p-6">
           <h3 class="text-2xl font-semibold text-green-900 mb-4">Domáce Zvieratá a Ďalšie Info</h3>
-          <div class="grid grid-cols-3 gap-3 text-gray-700">
+          <div class="grid grid-cols-3 max-[424px]:grid-cols-1 gap-3 text-gray-700">
             <InfoItem 
               emoji="🐶" 
               :label="roommate.hasDog ? 'Má psa' : 'Nemá psa'" 
@@ -235,7 +236,7 @@
         <!-- School Information -->
         <div v-if="roommate.selectedSchool!= ''" class="mt-6 bg-purple-50 rounded-xl p-6">
           <h3 class="text-2xl font-semibold text-purple-900 mb-4">Vzdelanie</h3>
-          <div class="grid grid-cols-3 gap-3 text-gray-700">
+          <div class="grid grid-cols-3 max-[424px]:grid-cols-1 gap-3 text-gray-700">
             <InfoItem 
               emoji="🏫" 
               :label="roommate.selectedSchool" 
@@ -269,6 +270,7 @@
     :images="processedImages"
     @close="showFullGallery = false"
   />
+</Teleport>
 </template>
 
 

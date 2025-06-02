@@ -10,17 +10,16 @@ import {
   startAfter,
   getDocs,
   type QueryConstraint,
-  GeoPoint
+  GeoPoint // Ensure GeoPoint is imported
 } from 'firebase/firestore';
-import type { Roommate } from '~/types/user';
+import type { Roommate } from '~/types/user'; // Assuming Roommate type includes 'occupation?: string;'
 import type { EmittedFilters as RoommateBaseFilters } from '~/components/users/RoommateFilter.vue';
 
 const PAGE_SIZE = 10;
-const FIRESTORE_FETCH_LIMIT = PAGE_SIZE * 3; // Define it here, accessible to the whole composable
+const FIRESTORE_FETCH_LIMIT = PAGE_SIZE * 3;
 
 // --- Helper for Haversine distance calculation ---
 function haversineDistance(
-  // ... (haversineDistance function remains the same)
   coords1: { latitude: number; longitude: number },
   coords2: { latitude: number; longitude: number },
   isMiles: boolean = false
@@ -51,141 +50,168 @@ export function useFilteredRoommates(
   const roommatesCollection = collection(db, 'users');
 
   const allFetchedRoommates = shallowRef<Roommate[]>([]);
-  const roommates = shallowRef<Roommate[]>([]);
+  const roommates = shallowRef<Roommate[]>([]); // This will hold the currently visible page of roommates
   const pending = ref(true);
   const error = ref<Error | null>(null);
   const hasNextPage = ref(false);
 
+  // Watch for changes in filters, centerGeoPoint, or searchRadiusKm
   watch([filters, centerGeoPoint, searchRadiusKm], () => {
-    console.log("useFilteredRoommates: Filters or geo params changed, resetting and fetching.");
+    console.log("useFilteredRoommates: Filters, geoPoint, or radius changed. Resetting and fetching.");
+    // Resetting all data and cursors for a new base query
     allFetchedRoommates.value = [];
+    roommates.value = [];
     currentPageInternal.value = 1;
     pageStartCursorsInternal.value = { 1: null };
-    fetchAndFilterRoommates();
+    hasNextPage.value = false; // Reset hasNextPage as well
+    fetchAndFilterRoommates(false); // false indicates not loading more, but a fresh fetch
   }, { deep: true });
 
-  const applyClientSideFiltersAndPaginate = () => {
-    // ... (applyClientSideFiltersAndPaginate function remains the same)
-    let processedRoommates = allFetchedRoommates.value;
 
+  const applyClientSideFiltersAndPaginate = () => {
+    const currentFilters = filters.value;
+    let processedRoommates = [...allFetchedRoommates.value]; // Start with a copy of all fetched roommates
+
+    console.log(`Client-side processing: Starting with ${processedRoommates.length} roommates from Firestore buffer.`);
+
+    // 1. Apply 'isWorking' filter (if active)
+    // This filter means `occupation` should not be 'Nezamestnaný'.
+    // If `occupation` is null, undefined, or any other string, it passes.
+    if (currentFilters?.isWorking === true) {
+      console.log("Applying client-side filter: isWorking (occupation !== 'Nezamestnaný')");
+      processedRoommates = processedRoommates.filter(roommate => {
+        return roommate.occupation !== 'Nezamestnaný';
+      });
+      console.log(`Roommates after 'isWorking' filter: ${processedRoommates.length}`);
+    }
+
+    // 2. Apply Geo-distance filter (if active)
     if (centerGeoPoint?.value && searchRadiusKm?.value > 0) {
-      console.log(`Applying geo filter for roommates: Center ${centerGeoPoint.value.latitude},${centerGeoPoint.value.longitude}, Radius ${searchRadiusKm.value}km`);
+      console.log(`Applying geo filter: Center ${centerGeoPoint.value.latitude},${centerGeoPoint.value.longitude}, Radius ${searchRadiusKm.value}km`);
       const searchCenter = {
         latitude: centerGeoPoint.value.latitude,
         longitude: centerGeoPoint.value.longitude,
       };
       processedRoommates = processedRoommates.filter(roommate => {
-        if (roommate.coordinates && typeof (roommate.coordinates as any).latitude === 'number' && typeof (roommate.coordinates as any).longitude === 'number') {
+        // Ensure coordinates exist and are of the expected Firebase GeoPoint structure or a compatible object
+        const coords = roommate.coordinates as any; // Cast to any for easier access, ensure your Roommate type is correct
+        if (coords && typeof coords.latitude === 'number' && typeof coords.longitude === 'number') {
           const roommateLocation = {
-            latitude: (roommate.coordinates as any).latitude,
-            longitude: (roommate.coordinates as any).longitude,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
           };
           const distance = haversineDistance(searchCenter, roommateLocation);
           return distance <= searchRadiusKm.value;
         }
-        return false;
+        return false; // Roommate doesn't have valid coordinates for geo-filtering
       });
       console.log(`Roommates after geo filter: ${processedRoommates.length}`);
     }
 
+    // 3. Paginate the fully client-side filtered list
     const startIndex = (currentPageInternal.value - 1) * PAGE_SIZE;
     const endIndex = startIndex + PAGE_SIZE;
     roommates.value = processedRoommates.slice(startIndex, endIndex);
 
     hasNextPage.value = processedRoommates.length > endIndex;
+    console.log(`Paginated view: Displaying ${roommates.value.length} roommates for page ${currentPageInternal.value}. Total processed after all client filters: ${processedRoommates.length}. Has next: ${hasNextPage.value}`);
   };
+
 
   const fetchAndFilterRoommates = async (loadMoreFirestore = false) => {
     if (!loadMoreFirestore) {
         pending.value = true;
-        // When not loading more, it's a fresh query (filters changed or initial load)
-        // Resetting allFetchedRoommates is handled by the watcher now.
-        // Cursors are also reset by the watcher.
+        // Resetting of allFetchedRoommates and cursors is now primarily handled by the watcher
+        // for changes in filters/geo-params.
+        // This 'pending' flag is for the current fetch operation.
     }
     error.value = null;
 
     const constraints: QueryConstraint[] = [];
     const currentFilters = filters.value;
 
+    // Firestore query constraints (applied server-side by Firestore)
     if (currentFilters) {
         if (currentFilters.gender) {
             constraints.push(where('gender', '==', currentFilters.gender));
         }
-
-        // --- ADDED/CORRECTED AGE FILTER ---
-        if (typeof currentFilters.minAge === 'number' && currentFilters.minAge >= 0) { // Or your min age (e.g. 16)
+        if (typeof currentFilters.minAge === 'number' && currentFilters.minAge >= 16) {
             constraints.push(where('age', '>=', currentFilters.minAge));
         }
-        if (typeof currentFilters.maxAge === 'number' && currentFilters.maxAge > 0) { // Or your min age
+        if (typeof currentFilters.maxAge === 'number' && currentFilters.maxAge >= 16) {
             constraints.push(where('age', '<=', currentFilters.maxAge));
         }
-        // --- END OF AGE FILTER ---
-
-
-        // Budget Filters
         if (typeof currentFilters.minBudget === 'number' && currentFilters.minBudget >= 0) {
             constraints.push(where('budget', '>=', currentFilters.minBudget));
         }
         if (typeof currentFilters.maxBudget === 'number' && currentFilters.maxBudget > 0) {
             constraints.push(where('budget', '<=', currentFilters.maxBudget));
         }
-
-        // Boolean-like filters from RoommateFilter.vue (isSmoker, hasPets, student)
-        // The filter component sends `isSmoker: false` if "wantsNonSmoker" is checked.
-        // It sends `hasPets: false` if "wantsNoPets" is checked.
-        // It sends `student: true` if "isStudent" is checked.
-        // If the checkbox is not checked for these, the key is omitted from the payload.
-        if (typeof currentFilters.isSmoker === 'boolean') { // Will be true if `isSmoker: false` is in payload
+        if (typeof currentFilters.isSmoker === 'boolean') {
             constraints.push(where('isSmoker', '==', currentFilters.isSmoker));
         }
-        if (typeof currentFilters.hasPets === 'boolean') { // Will be true if `hasPets: false` is in payload
+        if (typeof currentFilters.hasPets === 'boolean') {
             constraints.push(where('hasPets', '==', currentFilters.hasPets));
         }
-        if (currentFilters.student === true) { // Only filter for `student: true` if present
+        if (currentFilters.student === true) {
             constraints.push(where('student', '==', true));
         }
+        // Note: `isWorking` is handled client-side, so no Firestore constraint for it here.
     }
 
-    constraints.push(orderBy('updatedAt', 'desc'));
-    // const firestoreFetchLimit = PAGE_SIZE * 3; // REMOVED from here
+    constraints.push(orderBy('updatedAt', 'desc')); // Default sort order
 
-    const cursorForFirestorePage = pageStartCursorsInternal.value[Object.keys(pageStartCursorsInternal.value).length]; // Get the latest cursor
+    // Handle Firestore pagination (cursors)
+    const lastKnownCursorKey = Object.keys(pageStartCursorsInternal.value).length;
+    const cursorForFirestorePage = pageStartCursorsInternal.value[lastKnownCursorKey];
+
     if (loadMoreFirestore && cursorForFirestorePage) {
+        console.log("Using startAfter cursor for Firestore pagination.");
         constraints.push(startAfter(cursorForFirestorePage));
     }
-    constraints.push(limit(FIRESTORE_FETCH_LIMIT)); // USE THE CONSTANT
+    constraints.push(limit(FIRESTORE_FETCH_LIMIT));
 
-    const constraintSummary = constraints.map(c => { /* ... (constraintSummary logging) ... */ });
-    console.log("(Composable Roommates) Firestore Query Constraints:", constraintSummary.join(' || '));
+    const constraintSummary = constraints.map(c => {
+        const type = (c as any)._type;
+        if (type === 'where') return `WHERE ${(c as any)._fieldOp._field.segments.join('.')} ${(c as any)._fieldOp._op} '${(c as any)._fieldOp._value}'`;
+        if (type === 'orderBy') return `ORDER BY ${(c as any)._orderBy._field.segments.join('.')} ${(c as any)._orderBy._direction}`;
+        if (type === 'limit') return `LIMIT ${(c as any)._limit}`;
+        if (type === 'startAfter') return `STARTAFTER`;
+        return type;
+    }).join(' || ');
+    console.log("(Composable Roommates) Firestore Query Constraints:", constraintSummary);
+
 
     try {
         const snapshot = await getDocs(query(roommatesCollection, ...constraints));
         const fetchedFirestoreRoommates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Roommate);
-        console.log(`Fetched ${fetchedFirestoreRoommates.length} roommates from Firestore.`);
+        console.log(`Fetched ${fetchedFirestoreRoommates.length} roommates from Firestore this batch.`);
 
         if (loadMoreFirestore) {
             allFetchedRoommates.value = [...allFetchedRoommates.value, ...fetchedFirestoreRoommates];
         } else {
-            allFetchedRoommates.value = fetchedFirestoreRoommates;
+            allFetchedRoommates.value = fetchedFirestoreRoommates; // Replace if it's a fresh query
         }
+        console.log(`Total roommates in client buffer (allFetchedRoommates): ${allFetchedRoommates.value.length}`);
 
-        const lastDoc = snapshot.docs[snapshot.docs.length - 1];
-        if (snapshot.docs.length === FIRESTORE_FETCH_LIMIT && lastDoc) { // USE THE CONSTANT
-            pageStartCursorsInternal.value[Object.keys(pageStartCursorsInternal.value).length + 1] = lastDoc;
+        const lastDocInBatch = snapshot.docs[snapshot.docs.length - 1];
+        if (fetchedFirestoreRoommates.length === FIRESTORE_FETCH_LIMIT && lastDocInBatch) {
+            // Potential for more data from Firestore for this query set
+            pageStartCursorsInternal.value[lastKnownCursorKey + 1] = lastDocInBatch;
+            console.log("Stored cursor for next potential Firestore fetch.");
         } else {
-             // If fewer docs than limit were fetched, it means no more docs for this specific query set from Firestore
-             // We might want to signify that no more Firestore fetches are needed for this query set
-             // by removing the "next" cursor if it was optimistically set.
-             // However, this needs careful handling if filters change. For now, let's keep it simple.
-             // A more robust way is to set a flag like `noMoreDataFromFirestore = true`.
-             delete pageStartCursorsInternal.value[Object.keys(pageStartCursorsInternal.value).length + 1]; // Clean up speculative next cursor if not full page
+            // Fewer docs than limit fetched, or no docs: no more data from Firestore for this query set
+            // Remove any speculative next cursor if it exists for the *next* page beyond current
+            delete pageStartCursorsInternal.value[lastKnownCursorKey + 1];
+            console.log("End of Firestore results for this query or less than limit fetched. No next Firestore cursor stored for this path.");
         }
-
-        applyClientSideFiltersAndPaginate();
+        
+        applyClientSideFiltersAndPaginate(); // Apply client-side filters and update paginated view
 
     } catch (err) {
         console.error("(Composable Roommates) Firestore fetch error:", err);
         error.value = err instanceof Error ? err : new Error('Failed to fetch roommates');
+        // Clear data on error
         allFetchedRoommates.value = [];
         roommates.value = [];
         hasNextPage.value = false;
@@ -195,49 +221,66 @@ export function useFilteredRoommates(
   };
 
   onMounted(() => {
-    fetchAndFilterRoommates(false);
+    if (allFetchedRoommates.value.length === 0) { // Fetch only if not already populated (e.g. by SSR)
+        console.log("useFilteredRoommates: onMounted, initial fetch.");
+        fetchAndFilterRoommates(false);
+    } else {
+        console.log("useFilteredRoommates: onMounted, data already present, applying client filters.");
+        pending.value = true; // Set pending before potentially long client-side processing
+        applyClientSideFiltersAndPaginate();
+        pending.value = false;
+    }
   });
 
   const loadNextPage = () => {
-    if (hasNextPage.value && !pending.value) {
+    if (pending.value) return; // Prevent multiple calls if already loading
+
+    if (hasNextPage.value) {
       currentPageInternal.value++;
-      const roomsNeededForCurrentUiPageDisplay = currentPageInternal.value * PAGE_SIZE;
+      console.log(`loadNextPage: Advanced to UI page ${currentPageInternal.value}.`);
+      // Check if we have enough items in the client-side `processedRoommates` (after all filters)
+      // to display this new page.
+      // The `applyClientSideFiltersAndPaginate` function already updates `hasNextPage` based on `processedRoommates`.
+      // We need to see if the `allFetchedRoommates` buffer potentially needs more from Firestore.
 
-      // Check if we have enough data in our client-side buffer (allFetchedRoommates)
-      // If not, and we think there might be more data in Firestore, then fetch.
-      const lastKnownFirestoreCursorKey = Object.keys(pageStartCursorsInternal.value).length;
-      const hasPotentialFirestoreCursor = !!pageStartCursorsInternal.value[lastKnownFirestoreCursorKey];
+      const currentTotalClientBuffer = allFetchedRoommates.value.length;
+      // Estimate how many items we *might* have after client-side filters for the next UI page
+      const itemsNeededForNextUiPage = currentPageInternal.value * PAGE_SIZE;
+
+      const lastKnownCursorKey = Object.keys(pageStartCursorsInternal.value).length;
+      const hasPotentialFirestoreCursor = !!pageStartCursorsInternal.value[lastKnownCursorKey] &&
+                                          typeof pageStartCursorsInternal.value[lastKnownCursorKey] !== 'undefined' &&
+                                          pageStartCursorsInternal.value[lastKnownCursorKey] !== null;
 
 
-      // Condition to fetch more from Firestore:
-      // 1. We need more items for the current UI page than we have in our total buffer.
-      // 2. EITHER:
-      //    a. We have a valid "next" cursor stored (from fetching a full FIRESTORE_FETCH_LIMIT batch previously).
-      //    b. OR, as a heuristic: the total items fetched is a multiple of FIRESTORE_FETCH_LIMIT,
-      //       and we don't have an explicit "no more data" signal (which we don't have strongly implemented yet).
-      const moreDataNeededThanBuffered = roomsNeededForCurrentUiPageDisplay > allFetchedRoommates.value.length;
-      const isLastFirestoreFetchFull = allFetchedRoommates.value.length > 0 && allFetchedRoommates.value.length % FIRESTORE_FETCH_LIMIT === 0;
-      const hasNextCursorStored = !!pageStartCursorsInternal.value[Object.keys(pageStartCursorsInternal.value).length]; // Check if the latest key has a cursor
-
-      if (moreDataNeededThanBuffered && (hasNextCursorStored || isLastFirestoreFetchFull) ) {
-          console.log("Need more roommate data from Firestore for next UI page display.");
-          fetchAndFilterRoommates(true);
+      // Heuristic: If the number of items *currently displayed* for the new page would be less than PAGE_SIZE
+      // AND we have a Firestore cursor (meaning last Firestore fetch was full), then fetch more.
+      // This is tricky because client-side filters can reduce the count.
+      // A simpler approach: if items needed for the current page end (after increment)
+      // goes beyond what we have in `allFetchedRoommates`, and we have a next cursor, try fetching.
+      if (itemsNeededForNextUiPage > currentTotalClientBuffer && hasPotentialFirestoreCursor) {
+          console.log(`loadNextPage: Need more data from Firestore. Current buffer: ${currentTotalClientBuffer}, needed for page ${currentPageInternal.value}: ~${itemsNeededForNextUiPage}. Fetching more.`);
+          fetchAndFilterRoommates(true); // true indicates loading more data from Firestore
       } else {
-          applyClientSideFiltersAndPaginate();
+          console.log("loadNextPage: Using existing client buffer for pagination.");
+          applyClientSideFiltersAndPaginate(); // Just re-paginate from existing client-side buffer
       }
+    } else {
+        console.log("loadNextPage: No next page or already pending.");
     }
   };
 
   const loadPreviousPage = () => {
-    // ... (loadPreviousPage function remains the same)
-     if (currentPageInternal.value > 1 && !pending.value) {
+    if (pending.value) return;
+    if (currentPageInternal.value > 1) {
         currentPageInternal.value--;
+        console.log(`loadPreviousPage: Moved to UI page ${currentPageInternal.value}.`);
         applyClientSideFiltersAndPaginate();
     }
   };
 
   return {
-    roommates,
+    roommates, // The paginated and filtered list for UI
     pending,
     error,
     currentPage: currentPageInternal,

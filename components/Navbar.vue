@@ -45,7 +45,7 @@
           <div v-if="!isAuthenticated">
             <button
               @click="openLogin"
-              class="group relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 overflow-hidden"
+              class="prihlasit_sa group relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 overflow-hidden"
             >
               <span class="relative z-10">Prihlásiť sa</span>
               <div class="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
@@ -200,3 +200,14 @@ const signOut = async () => {
   }
 };
 </script>
+
+<style scoped>
+@media screen and (max-width: 400px) {
+  .prihlasit_sa {
+    padding: 0.3rem;
+    font-size: 1rem;
+    margin-right: -0.7rem;
+  }
+  
+}
+</style>

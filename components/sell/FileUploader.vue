@@ -20,15 +20,37 @@ const files = ref([])
 const isUploading = ref(false)
 const uploadError = ref(null)
 const uploadedUrls = ref([])
+const uploadProgress = ref(0)
 
 // Get Firebase storage instance
 const storage = useFirebaseStorage()
 
 // Emit event when upload completes
 const emit = defineEmits(['uploadComplete'])
+
 // Update the reactive files array when FilePond emits updatefiles event
 function updateFiles(fileItems) {
   files.value = fileItems
+}
+
+// Compress image before upload
+function compressImage(file, maxWidth = 1200, quality = 0.8) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+    
+    img.onload = () => {
+      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
+      canvas.width = img.width * ratio
+      canvas.height = img.height * ratio
+      
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(resolve, 'image/jpeg', quality)
+    }
+    
+    img.src = URL.createObjectURL(file)
+  })
 }
 
 async function handleProcess() {
@@ -40,18 +62,32 @@ async function handleProcess() {
   isUploading.value = true
   uploadError.value = null
   uploadedUrls.value = []
+  uploadProgress.value = 0
 
   try {
-    for (const fileItem of files.value) {
-      // FilePond might wrap the file in an object, so extract it
+    // ✅ FAST - Parallel uploads with compression
+    const uploadPromises = files.value.map(async (fileItem, index) => {
       const file = fileItem.file ? fileItem.file : fileItem
-      const filename = `${Date.now()}_${file.name}`
+      
+      // Compress image if it's large
+      const compressedFile = file.size > 1000000 ? await compressImage(file) : file
+      
+      const filename = `${Date.now()}_${index}_${file.name}`
       const fileRef = storageRef(storage, `images/${filename}`)
       
-      await uploadBytes(fileRef, file)
+      await uploadBytes(fileRef, compressedFile)
       const url = await getDownloadURL(fileRef)
-      uploadedUrls.value.push(url)
-    }
+      
+      // Update progress
+      uploadProgress.value = Math.round(((index + 1) / files.value.length) * 100)
+      
+      return url
+    })
+
+    // Wait for all uploads to complete
+    const urls = await Promise.all(uploadPromises)
+    uploadedUrls.value = urls
+    
     // Emit event for parent component if needed
     emit('uploadComplete', uploadedUrls.value)
   } catch (e) {
@@ -59,11 +95,12 @@ async function handleProcess() {
     console.error('Upload failed:', e)
   } finally {
     isUploading.value = false
+    uploadProgress.value = 0
   }
 }
 
 // Expose functions and variables to parent
-defineExpose({ handleProcess, uploadedUrls })
+defineExpose({ handleProcess, uploadedUrls, isUploading, uploadProgress })
 </script>
 
 <template>
@@ -75,7 +112,18 @@ defineExpose({ handleProcess, uploadedUrls })
       :acceptedFileTypes="['image/png', 'image/jpeg', 'image/gif']"
       label-idle='Pridajte fotky pre väčšiu šancu na úspech. <span class="filepond--label-action">Browse</span>' 
     />
-    <!-- Note: Removed the separate upload button so that parent controls when to upload -->
+    
+    <!-- Progress indicator -->
+    <div v-if="isUploading" class="space-y-2">
+      <div class="bg-gray-200 rounded-full h-2">
+        <div 
+          class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+          :style="{ width: uploadProgress + '%' }"
+        ></div>
+      </div>
+      <p class="text-sm text-gray-600">Nahrávanie... {{ uploadProgress }}%</p>
+    </div>
+    
     <p v-if="uploadError" class="text-red-500">{{ uploadError }}</p>
   </div>
 </template>

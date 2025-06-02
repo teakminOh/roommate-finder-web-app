@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl relative cursor-pointer w-96"
+    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl relative cursor-pointer w-80 sm:w-96"
     @mouseenter="showArrows = true"
     @mouseleave="showArrows = false"
     @click="isModalOpen = true"
@@ -15,7 +15,7 @@
     <!-- Image Carousel -->
     <div class="relative">
       <img
-        :src="props.roommate.images && props.roommate.images.length > 0 ? props.roommate.images[currentImageIndex] : '~/public/images/placeholder.jpg'"
+        :src="props.roommate.images && props.roommate.images.length > 0 ? props.roommate.images[currentImageIndex] : '/images/thumbup.png'"
         alt="Roommate Image"
         class="w-full h-64 object-cover rounded-t-xl"
       />
@@ -143,5 +143,12 @@ button {
 
 button:hover {
   transform: scale(1.1);
+}
+
+/* Custom responsive breakpoint for screens smaller than 397px */
+@media (max-width: 396px) {
+  .w-80 {
+    width: 18rem; /* 288px - smaller than w-80 (320px) */
+  }
 }
 </style>

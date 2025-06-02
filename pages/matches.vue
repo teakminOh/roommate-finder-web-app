@@ -216,7 +216,7 @@ const hasAnyMatches = computed(() => {
       <div class="max-w-6xl mx-auto relative z-10">
         <div class="flex items-center mb-4">
           <div class="bg-white/20 backdrop-blur-sm rounded-full p-3 mr-4">
-            <span class="material-symbols-outlined text-3xl">favorite</span>
+            <span class="material-symbols-outlined text-3xl">bookmark</span>
           </div>
           <div>
             <h1 class="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
@@ -301,7 +301,7 @@ const hasAnyMatches = computed(() => {
       <div v-if="!isLoading && !error">
         <!-- Enhanced Tab Navigation -->
         <div class="flex justify-center mb-12">
-          <div class="bg-white/90 backdrop-blur-lg shadow-2xl rounded-2xl p-2 flex gap-2 border border-slate-200">
+          <div class="bg-white/90 backdrop-blur-lg shadow-2xl rounded-2xl p-2 flex flex-wrap gap-2 border border-slate-200">
             <button
               @click="activeTab = 'all'"
               class="flex items-center px-6 py-3 rounded-xl font-semibold transition-colors duration-200"
@@ -399,7 +399,7 @@ const hasAnyMatches = computed(() => {
                 {{ displayableRoomMatches.length }}
               </span>
             </div>
-            <div class="flex flex-wrap justify-between gap-4">
+            <div class="flex flex-wrap justify-start gap-6">
               <div
                 v-for="item in displayableRoomMatches"
                 :key="item.matchDocId"
@@ -422,7 +422,7 @@ const hasAnyMatches = computed(() => {
                 {{ displayableUserMatches.length }}
               </span>
             </div>
-            <div class="flex flex-wrap justify-between gap-4">
+            <div class="flex flex-wrap justify-start gap-6">
               <div
                 v-for="item in displayableUserMatches"
                 :key="item.matchDocId"

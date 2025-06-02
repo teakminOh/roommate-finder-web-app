@@ -3,38 +3,55 @@
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
       <!-- Progress Indicator -->
       <div class="bg-gray-100 px-6 py-4 border-b">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between relative">
           <div 
             v-for="(step, index) in steps" 
             :key="index" 
-            class="flex-1 text-center relative"
+            class="flex flex-col items-center relative z-10"
+            :class="{ 'flex-1': index < steps.length - 1 }"
           >
+            <!-- Step Circle -->
             <div 
-              class="inline-flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 
-              ${currentStep > index ? 'bg-blue-600 text-white' : 
-                currentStep === index ? 'bg-blue-500 text-white' : 
-                'bg-gray-300 text-gray-600'}"
+              class="inline-flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 font-semibold"
+              :class="{
+                'bg-blue-600 text-white shadow-lg': currentStep === index,
+                'bg-green-600 text-white': currentStep > index,
+                'bg-gray-300 text-gray-600': currentStep < index
+              }"
             >
-              {{ index + 1 }}
+              <span v-if="currentStep > index">✓</span>
+              <span v-else>{{ index + 1 }}</span>
             </div>
-            <div class="text-xs mt-2 text-gray-700">
+            
+            <!-- Step Label -->
+            <div 
+              class="text-xs mt-2 font-medium transition-colors duration-300 text-center"
+              :class="{
+                'text-blue-600': currentStep === index,
+                'text-green-600': currentStep > index,
+                'text-gray-500': currentStep < index
+              }"
+            >
               {{ step }}
             </div>
             
             <!-- Connecting Line -->
             <div 
               v-if="index < steps.length - 1" 
-              class="absolute top-5 left-1/2 w-full -translate-x-1/2 -z-10"
-            >
-              <div 
-                class="h-1 transition-all duration-300"
-                :class="{
-                  'bg-blue-600': currentStep > index,
-                  'bg-gray-300': currentStep <= index
-                }"
-              ></div>
-            </div>
+              class="absolute top-5 left-full w-full h-0.5 transition-all duration-300 -z-10"
+              :class="{
+                'bg-green-600': currentStep > index,
+                'bg-gray-300': currentStep <= index
+              }"
+              style="transform: translateX(-50%);"
+            ></div>
           </div>
+        </div>
+        
+        <!-- Current Step Indicator -->
+        <div class="mt-4 text-center">
+          <span class="text-sm text-gray-600">Krok {{ currentStep + 1 }} z {{ steps.length }}: </span>
+          <span class="text-sm font-semibold text-blue-600">{{ steps[currentStep] }}</span>
         </div>
       </div>
 
@@ -42,7 +59,7 @@
       <form @submit.prevent="submitProfile" class="p-6">
         <!-- Basic Information Step -->
         <div v-if="currentStep === 0" class="space-y-6">
-          `<h2 class="text-xl font-bold mb-4">Detaily izby</h2>
+          <h2 class="text-xl font-bold mb-4">Detaily izby</h2>
 
           <!-- Preferred Gender -->
           <div>
@@ -100,16 +117,17 @@
             </label>
             <label class="flex items-center space-x-2">
               <input type="checkbox" v-model="isAccessible" class="h-4 w-4 text-blue-600" />
-              <span>🧑‍🦽 Bezbariérový prístup</span>
+              <span>♿ Bezbariérový prístup</span>
             </label>
           </div>
         </div>
 
+        <!-- Tenant Preferences Step -->
         <div v-if="currentStep === 1" class="space-y-6">
           <h2 class="text-xl font-bold mb-4">Preferencie nájomcu</h2>
 
           <div class="space-y-4">
-            <!-- Cat Friendly -->
+            <!-- Pets Allowed -->
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-700">🦴 Povolené domáce zvieratá</span>
               <label class="inline-flex items-center cursor-pointer">
@@ -150,10 +168,7 @@
           </div>
         </div>
 
-
-
-
-        <!-- Living Preferences Step -->
+        <!-- Property Description Step -->
         <div v-if="currentStep === 2" class="space-y-6">
           <h2 class="text-xl font-bold mb-4">Popis nehnuteľnosti a spolubývajúcich</h2>
 
@@ -188,38 +203,43 @@
           </div>
         </div>
 
-
-        <!-- Personal Bio Step -->
+        <!-- Photo Upload Step -->
         <div v-if="currentStep === 3" class="space-y-6">
-          <FileUploader ref="fileUploader" />
+          <h2 class="text-xl font-bold mb-4">Fotky</h2>
+          <p class="text-gray-600 mb-4">Nahrajte fotky vašej izby a nehnuteľnosti</p>
+          <!-- FileUploader component would go here -->
+          
+            <FileUploader ref="fileUploader" />
+          
         </div>
 
         <!-- Navigation Buttons -->
-        <div class="flex justify-between mt-6">
+        <div class="flex justify-between mt-8 pt-6 border-t">
           <button 
             v-if="currentStep > 0" 
             type="button" 
             @click="prevStep" 
-            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors duration-200"
           >
-            Späť
+            ← Späť
           </button>
           
           <button 
             v-if="currentStep < steps.length - 1" 
             type="button" 
             @click="nextStep" 
-            class="ml-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            class="ml-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
           >
-            Ďalej
+            Ďalej →
           </button>
           
           <button 
             v-if="currentStep === steps.length - 1" 
             type="submit" 
-            class="ml-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            :disabled="loading"
+            class="ml-auto px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors duration-200"
           >
-            Uložiť profil
+            {{ loading ? 'Ukladá sa...' : 'Uložiť profil' }}
           </button>
         </div>
       </form>
@@ -272,7 +292,6 @@ const studentsWelcome = ref(false)
 const aboutProperty = ref('')
 const aboutRoomies = ref('')
 
-
 const preferredGenders = [
   'Nezáleží',
   'Muž',
@@ -281,13 +300,12 @@ const preferredGenders = [
 
 // Current step tracking
 const currentStep = ref(0)
-
 const fileUploader = ref<InstanceType<typeof FileUploader>>()
 
 const loading = ref(false)
 const success = ref(false)
 const error = ref('')
-// Navigation methods
+
 // Navigation methods
 const nextStep = () => {
   if (currentStep.value < steps.length - 1) {
@@ -301,7 +319,6 @@ const prevStep = () => {
   }
 }
 
-
 async function submitProfile() {
   if (!uid) {
     error.value = 'Chýba používateľské ID.'
@@ -313,31 +330,29 @@ async function submitProfile() {
   success.value = false
 
   try {
-    // 1. Upload images first
+    // Submit profile data
     await fileUploader.value?.handleProcess()
     
     const uploadedUrls = fileUploader.value?.uploadedUrls || []
-
-    // 2. Submit profile data along with image URLs
     await setDoc(doc(db, 'rooms', uid), {
-    images: uploadedUrls,          // ✅ store uploaded URLs here
-    completedProfile: true,
-    preferredGender: preferredGender.value,
-    bathroomType: bathroomType.value,
-    parkingAvailable: parkingAvailable.value,
-    internetIncluded: internetIncluded.value,
-    isPrivateRoom: isPrivateRoom.value,
-    isFurnished: isFurnished.value,
-    isAccessible: isAccessible.value,
-    petsAllowed: petsAllowed.value,
-    catFriendly: catFriendly.value,
-    dogFriendly: dogFriendly.value,
-    childrenFriendly: childrenFriendly.value,
-    studentsWelcome: studentsWelcome.value,
-    aboutProperty: aboutProperty.value,
-    aboutRoomies: aboutRoomies.value,
-    updatedAt: new Date(),
-  }, { merge: true });
+      completedProfile: true,
+      preferredGender: preferredGender.value,
+      bathroomType: bathroomType.value,
+      parkingAvailable: parkingAvailable.value,
+      internetIncluded: internetIncluded.value,
+      isPrivateRoom: isPrivateRoom.value,
+      isFurnished: isFurnished.value,
+      isAccessible: isAccessible.value,
+      petsAllowed: petsAllowed.value,
+      catFriendly: catFriendly.value,
+      dogFriendly: dogFriendly.value,
+      childrenFriendly: childrenFriendly.value,
+      studentsWelcome: studentsWelcome.value,
+      aboutProperty: aboutProperty.value,
+      aboutRoomies: aboutRoomies.value,
+      updatedAt: new Date(),
+      images: uploadedUrls,
+    }, { merge: true });
 
     success.value = true
     setTimeout(() => {

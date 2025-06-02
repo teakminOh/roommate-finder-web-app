@@ -1,17 +1,18 @@
 <template>
+  <Teleport to="body">
   <div
     v-if="isOpen"
-    class="fixed inset-0 bg-gradient-to-br from-gray-300/70 to-gray-400/70 flex justify-center items-center z-50 p-4 overflow-hidden"
+    class="modal-backdrop fixed inset-0 bg-gradient-to-br from-gray-300/70 to-gray-400/70 flex justify-center items-center p-4 overflow-hidden max-[424px]:p-0"
     @click="closeModal"
   >
     <div 
-      class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto relative" 
+      class="bg-white shadow-2xl w-full max-w-6xl max-h-[100vh] overflow-y-auto relative max-[424px]:max-w-none max-[424px]:w-full max-[424px]:h-full max-[424px]:max-h-none" 
       @click.stop
     >
       <!-- Back Button -->
       <button
         @click="$emit('close')"
-        class="absolute top-4 left-4 z-10 group flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200"
+        class="absolute top-4 left-4 z-10 group flex items-center text-gray-600 hover:text-blue-800 transition-colors duration-200"
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -28,14 +29,14 @@
 
       
         <!-- Image Gallery -->
-        <div class="grid grid-cols-[2fr_1fr_1fr] gap-2 p-4 pb-0 mt-12">
+        <div class="grid grid-cols-[2fr_1fr_1fr] gap-2 p-4 pb-0 mt-12 max-[424px]:grid-cols-1 max-[424px]:gap-1 max-[424px]:p-2 max-[424px]:mt-16">
           <div
             v-for="(image, index) in displayedImages"
             :key="index"
             class="relative aspect-square rounded-lg overflow-hidden cursor-pointer group"
             :class="[
-              displayedImages.length === 1 ? 'col-span-3 mx-auto w-1/2' : '',
-              index === 0 ? 'row-span-2' : ''
+              displayedImages.length === 1 ? 'col-span-3 mx-auto w-1/2 max-[424px]:col-span-1 max-[424px]:w-full' : '',
+              index === 0 ? 'row-span-2 max-[424px]:row-span-1' : ''
             ]"
             @click="showFullGallery = true"
           >
@@ -63,15 +64,15 @@
           <!-- See All Photos Button -->
           <div
             v-if="processedImages.length > 5"
-            class="absolute bottom-80 right-4"
+            class="absolute bottom-80 right-4 max-[424px]:bottom-4 max-[424px]:right-2"
           >
             <button
               @click="showFullGallery = true"
-              class="bg-white/80 hover:bg-blue-100 text-blue-800 px-4 py-2 rounded-full flex items-center gap-2 shadow-md transition-all duration-200"
+              class="bg-white/80 hover:bg-blue-100 text-blue-800 px-4 py-2 rounded-full flex items-center gap-2 shadow-md transition-all duration-200 max-[424px]:px-3 max-[424px]:py-1 max-[424px]:text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6"
+                class="h-6 w-6 max-[424px]:h-4 max-[424px]:w-4"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -88,25 +89,25 @@
       
 
       <!-- Profile Content -->
-      <div class="p-6 pt-2">
+      <div class="p-6 pt-2 max-[424px]:p-4 max-[424px]:pt-2">
         <div class="flex flex-col md:flex-row gap-6">
           <!-- Room Profile Section -->
           <div class="flex-1">
-            <h2 class="text-3xl font-bold text-blue-800 mb-4">
+            <h2 class="text-3xl font-bold text-blue-800 mb-4 max-[424px]:text-2xl">
               {{ room.propertyType }} - {{ room.roomType }}
             </h2>
             
             <!-- Financial info card -->
-            <div class="bg-blue-50 rounded-xl p-4 mb-6 flex justify-between items-center">
+            <div class="bg-blue-50 rounded-xl p-4 mb-6 flex justify-between items-center max-[424px]:flex-col max-[424px]:items-start max-[424px]:gap-2">
               <div>
-                <p class="text-xl font-semibold text-blue-700">
+                <p class="text-xl font-semibold text-blue-700 max-[424px]:text-lg">
                   Rozpočet: {{ room.budget }}€
                 </p>
                 <p class="text-sm text-blue-600">
                   {{ room.rentWithBills ? 'Vrátane poplatkov' : 'Bez poplatkov' }}
                 </p>
               </div>
-              <div class="text-right">
+              <div class="text-right max-[424px]:text-left max-[424px]:w-full">
                 <p class="text-md font-medium text-blue-700">
                   Depozit: {{ room.securityDeposit }}€
                 </p>
@@ -118,16 +119,16 @@
 
             <!-- Room description -->
             <div class="mb-6">
-              <h3 class="text-xl font-semibold text-gray-800 mb-2">O nehnuteľnosti</h3>
-              <p class="text-gray-600 mb-4 leading-relaxed">
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 max-[424px]:text-lg">O nehnuteľnosti</h3>
+              <p class="text-gray-600 mb-4 leading-relaxed max-[424px]:text-sm">
                 {{ room.aboutProperty }}
               </p>
             </div>
             
             <!-- Roommates section -->
             <div class="mb-6">
-              <h3 class="text-xl font-semibold text-gray-800 mb-2">O spolubývajúcich</h3>
-              <p class="text-gray-600 mb-4 leading-relaxed">
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 max-[424px]:text-lg">O spolubývajúcich</h3>
+              <p class="text-gray-600 mb-4 leading-relaxed max-[424px]:text-sm">
                 {{ room.aboutRoomies }}
               </p>
               <p class="text-sm text-gray-500">
@@ -137,16 +138,16 @@
 
             <!-- Location -->
             <div class="mb-6">
-              <h3 class="text-xl font-semibold text-gray-800 mb-2">
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 max-[424px]:text-lg">
                 <span class="inline-block mr-2">📍</span> Lokalita
               </h3>
-              <p class="text-gray-700">{{ room.location }}, {{ room.zip }}</p>
+              <p class="text-gray-700 max-[424px]:text-sm">{{ room.location }}, {{ room.zip }}</p>
             </div>
 
             <!-- Amenities Grid -->
             <div class="mb-6">
-              <h3 class="text-xl font-semibold text-gray-800 mb-2">Vybavenie a podmienky</h3>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 max-[424px]:text-lg">Vybavenie a podmienky</h3>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 max-[424px]:grid-cols-2 max-[424px]:gap-2">
                 <AmenityItem 
                   :active="room.isFurnished"
                   icon="🪑"
@@ -182,8 +183,8 @@
 
             <!-- Pet Policy -->
             <div class="mb-6">
-              <h3 class="text-xl font-semibold text-gray-800 mb-2">Domáce zvieratá</h3>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 max-[424px]:text-lg">Domáce zvieratá</h3>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 max-[424px]:grid-cols-2 max-[424px]:gap-2">
                 <AmenityItem 
                   :active="room.petsAllowed"
                   icon="🐾"
@@ -209,16 +210,16 @@
 
             <!-- Bathroom Info -->
             <div class="mb-6">
-              <h3 class="text-xl font-semibold text-gray-800 mb-2">
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 max-[424px]:text-lg">
                 <span class="inline-block mr-2">🚿</span> Kúpeľňa
               </h3>
-              <p class="text-gray-700">{{ room.bathroomType }}</p>
+              <p class="text-gray-700 max-[424px]:text-sm">{{ room.bathroomType }}</p>
             </div>
 
             <!-- Contact info -->
             <div class="mt-8 p-4 bg-gray-50 rounded-xl">
-              <h3 class="text-lg font-semibold text-gray-800 mb-2">Kontaktné informácie</h3>
-              <p class="text-gray-700">
+              <h3 class="text-lg font-semibold text-gray-800 mb-2 max-[424px]:text-base">Kontaktné informácie</h3>
+              <p class="text-gray-700 max-[424px]:text-sm max-[424px]:break-all">
                 <span class="inline-block mr-2">📧</span> {{ room.email }}
               </p>
             </div>
@@ -232,12 +233,7 @@
                 :destination-coords="destinationCoords"
                 :api-key="''"
             />
-            <div v-else-if="!originCoords" class="text-center text-xs text-gray-400">
-                Could not load your location for travel estimates. Ensure your profile has coordinates.
-            </div>
-              <div v-else-if="!destinationCoords" class="text-center text-xs text-gray-400">
-                Travel estimates unavailable (destination coordinates missing).
-            </div>
+        
         </div>
         <div v-if="user" class="mt-6 h-full flex flex-col">
           <ChatWindow
@@ -250,11 +246,14 @@
     </div>
   </div>
 
+  <!-- FullGallery with higher z-index -->
   <FullGallery
     v-if="showFullGallery"
     :images="processedImages"
     @close="showFullGallery = false"
+    class="gallery-overlay"
   />
+</Teleport>
 </template>
 
 <script setup lang="ts">
@@ -447,6 +446,16 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Main modal backdrop */
+.modal-backdrop {
+  z-index: 9999 !important; /* Higher than navbar's z-20 */
+}
+
+/* FullGallery overlay - HIGHER than modal */
+.gallery-overlay {
+  z-index: 10001 !important; /* Higher than modal's 9999 */
+}
+
 /* Custom scrollbar for modal */
 .overflow-y-auto::-webkit-scrollbar {
   width: 8px;
@@ -460,5 +469,12 @@ onMounted(async () => {
 }
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Mobile full-screen styles for screens smaller than 425px */
+@media (max-width: 424px) {
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 4px;
+  }
 }
 </style>

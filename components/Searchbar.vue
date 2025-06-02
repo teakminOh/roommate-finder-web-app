@@ -15,7 +15,7 @@
       </h2>
 
       <!-- Search Type Selection -->
-      <div class="mb-5 flex justify-center space-x-4">
+      <div class="mb-5 flex flex-wrap justify-center gap-2 space-x-4">
         <label
           v-for="option in searchOptions"
           :key="option.value"

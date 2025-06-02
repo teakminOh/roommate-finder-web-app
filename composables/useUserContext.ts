@@ -5,7 +5,7 @@ import { doc } from 'firebase/firestore';
 import type { Room } from '~/types/room'; // Assuming your Room type
 
 export function useUserContext() {
-  const user = useCurrentUser();
+  const user = useCurrentUser(); // This is the Firebase Auth user
   const db = useFirestore();
   const isProcessingContext = ref(true); // To know when context is being determined
 
@@ -18,27 +18,19 @@ export function useUserContext() {
   });
 
   // Fetch the room document (or check its existence)
+  // This 'userRoom' is the data from the 'rooms' collection for the current user
   const { data: userRoom, pending: userRoomPending, promise: userRoomPromise } = useDocument<Room>(userRoomDocRef);
 
   const hasListedRoom = computed(() => !!userRoom.value); // True if userRoom.value is not null/undefined
 
   // Watch for changes in user or room data to update processing state
-  watch([user, userRoomPending], ([currentUser, roomPendingVal]) => {
-    if (!currentUser) {
+  watch([user, userRoomPending], ([currentUserAuth, roomPendingVal]) => {
+    if (!currentUserAuth) {
       isProcessingContext.value = false; // Not processing if no user
       return;
     }
     isProcessingContext.value = roomPendingVal;
   }, { immediate: true });
-
-  // Await initial load if you need to block on it, otherwise computed is fine
-  // onMounted(async () => {
-  //   if (user.value) {
-  //     await userRoomPromise.value; // Wait for the first fetch attempt
-  //   }
-  //   isProcessingContext.value = false;
-  // });
-
 
   const recommendationsPath = computed(() => {
     if (!user.value) return '/matches'; // Default if not logged in or context unknown yet
@@ -48,9 +40,11 @@ export function useUserContext() {
   });
 
   return {
-    user,
+    user,                     // The Firebase Auth user object (from useCurrentUser)
+    userRoom,                 // <<< ADD THIS: The document data from 'rooms/{uid}'
+    userRoomPending,          // <<< ADD THIS: Pending state for the userRoom document
     hasListedRoom,
     recommendationsPath,
-    isProcessingContext // You can use this to show a loading state in the dropdown if needed
+    isProcessingContext
   };
 }
