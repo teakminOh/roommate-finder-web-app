@@ -1,0 +1,45 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Rules for 'rooms' collection
+    match /rooms/{roomId} {
+      // Allow ANYONE (authenticated or not) to read room listings
+      allow read: if true;
+
+      // For creating, updating, or deleting rooms:
+      // Only allow authenticated users. You might want to make this more specific,
+      // e.g., only the user who created the room can update/delete it.
+      // allow write: if request.auth != null && request.auth.uid == resource.data.ownerId; (Example)
+      allow write: if request.auth != null; // Simple: any logged-in user can write
+    }
+
+    // Rules for 'users' collection (for roommate ads)
+    match /users/{userId} {
+      // Allow ANYONE to read user profiles/roommate ads
+      // IMPORTANT: Be very careful with what data is in your 'users' collection.
+      // If it contains sensitive private information (email, phone numbers not intended for public view),
+      // you should either:
+      // 1. Only make specific fields publicly readable (requires more complex rules not shown here).
+      // 2. Create a separate 'publicProfiles' or 'roommateAds' collection that only stores public data.
+      allow read: if true;
+
+      // For users updating their own profile:
+      allow update, delete: if request.auth != null && request.auth.uid == userId;
+      // For creating a new user document (e.g., during signup, though often handled by backend/functions):
+      allow create: if request.auth != null; // Or perhaps only if request.auth.uid == userId
+    }
+		
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  
+    // Optional: Default deny for any other paths not explicitly matched above
+    // This is a good security practice if you want to be explicit about what's allowed.
+    // If you add this, make sure ALL collections you need access to have their own rules.
+    // match /{document=**} {
+    //   allow read, write: if false; // Deny all other access by default
+    // }
+  }
+}

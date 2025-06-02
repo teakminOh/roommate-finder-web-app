@@ -116,7 +116,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import FavoriteRoom from './FavoriteRoom.vue';
-import RoomModal from '~/components/rooms/RoomModal.vue';
+const RoomModal = defineAsyncComponent(() =>
+  import('./RoomModal.vue')
+); // Lazy load the modal component
 import { useFavorites } from '~/composables/useFavorites';
 import type { Room } from '~/types/room';
 

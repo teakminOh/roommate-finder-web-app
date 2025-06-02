@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl relative cursor-pointer w-80 sm:w-96"
+    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl relative cursor-pointer w-96"
     @mouseenter="showArrows = true"
     @mouseleave="showArrows = false"
     @click="isModalOpen = true"
@@ -18,6 +18,7 @@
         :src="props.roommate.images && props.roommate.images.length > 0 ? props.roommate.images[currentImageIndex] : '/images/thumbup.png'"
         alt="Roommate Image"
         class="w-full h-64 object-cover rounded-t-xl"
+        loading="lazy"
       />
       
       <!-- Navigation Arrows -->
@@ -84,7 +85,9 @@
 import { ref, onMounted, watch } from 'vue';
 import FavoriteRoommate from './FavoriteRoommate.vue';
 import type { Roommate } from '~/types/user';
-import RoommateModal from './RoommateModal.vue';
+const RoommateModal = defineAsyncComponent(() =>
+  import('./RoommateModal.vue')
+);
 import { useFavorites } from '~/composables/useFavorites';
 
 const truncateText = (text: string, maxLength: number): string => {
@@ -146,9 +149,16 @@ button:hover {
 }
 
 /* Custom responsive breakpoint for screens smaller than 397px */
-@media (max-width: 396px) {
-  .w-80 {
-    width: 18rem; /* 288px - smaller than w-80 (320px) */
+
+
+@media (max-width: 403px) {
+  .w-96 {
+    width: 22rem; /* 288px - smaller than w-80 (320px) */
+  }
+}
+@media (max-width: 367px) {
+  .w-96 {
+    width: 19rem; /* 288px - smaller than w-80 (320px) */
   }
 }
 </style>

@@ -257,13 +257,14 @@
       <p class="text-lg">⏳ Načítavajú sa údaje inzerátu...</p>
     </div>
   </div>
-
+<Teleport to="body">
   <FullGallery
     v-if="showFullGalleryModal"
     :images="galleryImages"
     @close="showFullGalleryModal = false"
     :initial-index="galleryInitialIndex"
   />
+</Teleport>
 </template>
 
 <script setup>
@@ -323,24 +324,19 @@ const createEditableCopy = (sourceListing) => {
   // Deep copy to avoid mutating the original prop
   const freshCopy = JSON.parse(JSON.stringify(sourceListing));
   
-  // Ensure availableFrom is a 'YYYY-MM-DD' string or null for the date input
   if (freshCopy.availableFrom && typeof freshCopy.availableFrom.toDate === 'function') {
     freshCopy.availableFrom = formatDateForInput(freshCopy.availableFrom.toDate());
   } else if (freshCopy.availableFrom && typeof freshCopy.availableFrom === 'string') {
-    // If it's already a string, assume it's in a parsable format or 'YYYY-MM-DD'
-    // We might want to re-format it to ensure 'YYYY-MM-DD' strictly
     const d = new Date(freshCopy.availableFrom);
     if (!isNaN(d.getTime())) {
         freshCopy.availableFrom = formatDateForInput(d);
     } else {
-        freshCopy.availableFrom = null; // Invalid date string
+        freshCopy.availableFrom = null; 
     }
   } else {
-    freshCopy.availableFrom = null; // If undefined or other types
+    freshCopy.availableFrom = null; 
   }
 
-
-  // Normalize coordinates structure
   if (freshCopy.coordinates && (freshCopy.coordinates.latitude === undefined || freshCopy.coordinates.longitude === undefined)) {
       if (Array.isArray(freshCopy.coordinates) && freshCopy.coordinates.length === 2) {
            freshCopy.coordinates = { latitude: freshCopy.coordinates[0], longitude: freshCopy.coordinates[1]};
@@ -353,9 +349,7 @@ const createEditableCopy = (sourceListing) => {
       freshCopy.coordinates = null; 
   }
   
-  // Ensure 'images' is an array
   freshCopy.images = Array.isArray(freshCopy.images) ? freshCopy.images : [];
-  // 'imageStoragePaths' is not used in this simplified scenario (root 'images/' folder)
   delete freshCopy.imageStoragePaths;
 
   return freshCopy;
@@ -368,14 +362,14 @@ watch(() => props.listing, (newVal) => {
 
 // Computed property for images shown in the display grid (when not editing)
 const currentDisplayImages = computed(() => {
-    const source = props.listing; // Always use props.listing for non-edit display
+    const source = props.listing; 
+    // console.log("currentDisplayImages using props.listing.images:", source ? JSON.stringify(source.images) : 'null source'); // DEBUG LOG
     if (!source?.images?.length) return [];
     return source.images.map(url => ({ url, width: 800, height: 600, alt: 'Obrázok inzerátu' }));
 });
 
 // Computed property for images passed to the FullGallery
 const galleryImages = computed(() => {
-    // If editing, use editableListing.images, otherwise props.listing.images for the gallery
     const sourceImages = isEditingDetails.value && editableListing.value 
                          ? editableListing.value.images 
                          : props.listing?.images;
@@ -389,14 +383,14 @@ function openFullGallery(index = 0) {
   showFullGalleryModal.value = true;
 }
 
-watch(() => props.listing?.id, () => { // Close gallery if listing fundamentally changes
+watch(() => props.listing?.id, () => { 
     showFullGalleryModal.value = false;
 });
 
 
 function handleLocationDetailsChange(locationData) {
   if (editableListing.value) {
-    editableListing.value.location = locationData.address; // v-model on LocationInput handles this
+    editableListing.value.location = locationData.address; 
     if (locationData.lat !== undefined && locationData.lng !== undefined) {
       editableListing.value.coordinates = { latitude: locationData.lat, longitude: locationData.lng };
     } else {
@@ -414,23 +408,24 @@ function handlePetsAllowedChange(newValue) {
 
 function startDetailsEdit() {
   if (props.listing) {
-    // Re-create editableListing from props.listing to get a fresh copy
     editableListing.value = createEditableCopy(props.listing);
+    // console.log("startDetailsEdit - editableListing.images AFTER copy:", editableListing.value ? JSON.stringify(editableListing.value.images) : 'null editableListing'); // DEBUG LOG
     isEditingDetails.value = true;
   }
 }
 
 function cancelDetailsEdit() {
   if (props.listing) {
-    // Revert editableListing to a fresh copy from props.listing
     editableListing.value = createEditableCopy(props.listing);
   }
   isEditingDetails.value = false;
 }
 
 function updateEditableImageUrls(newUrls) {
+  // console.log("updateEditableImageUrls - received newUrls:", JSON.stringify(newUrls)); // DEBUG LOG
   if (editableListing.value) {
     editableListing.value.images = [...newUrls];
+    // console.log("updateEditableImageUrls - editableListing.images AFTER update:", JSON.stringify(editableListing.value.images)); // DEBUG LOG
   }
 }
 
@@ -441,14 +436,11 @@ async function saveListingDetails() {
   }
   isSavingDetails.value = true;
 
-  // Create a deep copy for saving, ensuring editableListing itself is not mutated further by this process
   const dataToSave = JSON.parse(JSON.stringify(editableListing.value));
-
-  // Remove zip before saving, if it exists
+  // console.log("Saving images:", dataToSave ? JSON.stringify(dataToSave.images) : 'null dataToSave'); // DEBUG LOG
+  
   delete dataToSave.zip;
-  // 'imageStoragePaths' is not part of editableListing in this scenario
 
-  // Ensure numeric fields are numbers or null
   if (dataToSave.budget !== undefined) {
     dataToSave.budget = Number(dataToSave.budget) || null;
   }
@@ -456,7 +448,6 @@ async function saveListingDetails() {
     dataToSave.securityDeposit = Number(dataToSave.securityDeposit) || null;
   }
 
-  // Ensure boolean fields
   const booleanFields = [
     'rentWithBills', 'isPrivateRoom', 'isFurnished', 'internetIncluded',
     'parkingAvailable', 'isAccessible', 'petsAllowed', 'dogFriendly',
@@ -466,16 +457,12 @@ async function saveListingDetails() {
     dataToSave[field] = dataToSave[field] === true || String(dataToSave[field]).toLowerCase() === 'true';
   });
 
-  // Coordinates handling
   if (dataToSave.coordinates && (dataToSave.coordinates.latitude === undefined || dataToSave.coordinates.longitude === undefined)) {
       dataToSave.coordinates = null;
   }
   
-  // availableFrom is already a 'YYYY-MM-DD' string or null in dataToSave due to createEditableCopy
-  // and v-model binding. The parent (Dashboard) will save it as is.
-
   emit('update-listing-details', {
-    data: dataToSave, // dataToSave includes the 'images' array of URLs
+    data: dataToSave, 
     onComplete: (success) => { 
       isSavingDetails.value = false; 
       if (success) {
@@ -485,10 +472,9 @@ async function saveListingDetails() {
   });
 }
 
-// Watch for external changes that might stop the saving process or edit mode
 watch(isEditingDetails, (newValue, oldValue) => {
-  if (oldValue && !newValue && isSavingDetails.value) { // If editing was turned off
-    isSavingDetails.value = false; // Reset saving state
+  if (oldValue && !newValue && isSavingDetails.value) { 
+    isSavingDetails.value = false; 
   }
 });
 </script>

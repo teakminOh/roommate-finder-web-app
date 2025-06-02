@@ -49,7 +49,7 @@ const props = defineProps({
   initialImageUrls: { type: Array, default: () => [] },
   storagePath: { type: String, required: true },
   maxFiles: { type: Number, default: 10 },
-  maxFileSize: { type: String, default: '5MB' },
+  maxFileSize: { type: String, default: '2MB' },
 });
 
 const emit = defineEmits(['images-updated', 'upload-error', 'delete-error', 'delete-warning']);

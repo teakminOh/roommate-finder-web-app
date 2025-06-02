@@ -1,4 +1,4 @@
-<!-- components/SimplifiedProfileImageChanger.vue -->
+
 <template>
   <div class="inline-block"> <!-- Or 'block' if you want it on its own line -->
     <button
@@ -41,7 +41,12 @@ const props = defineProps({
   currentImagePath: { type: String, default: null }, // Path of the image to delete
   storagePath: { type: String, required: true },
   buttonClass: { type: String, default: 'p-2 bg-blue-100 rounded-full shadow hover:bg-blue-200' },
-  iconClass: { type: String, default: 'w-4 h-4 text-blue-700' }
+  iconClass: { type: String, default: 'w-4 h-4 text-blue-700' },
+  // Compression settings
+  maxWidth: { type: Number, default: 800 },
+  maxHeight: { type: Number, default: 600 },
+  quality: { type: Number, default: 0.8 }, // 0.1 to 1.0
+  compressFormat: { type: String, default: 'image/jpeg' } // 'image/jpeg' or 'image/webp'
 });
 
 const emit = defineEmits(['image-update-confirmed', 'upload-error']);
@@ -54,6 +59,59 @@ const storage = useFirebaseStorage();
 function triggerFileInput() {
   // errorMessage.value = null;
   fileInput.value?.click();
+}
+
+// Image compression function
+function compressImage(file, maxWidth, maxHeight, quality, format) {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calculate new dimensions while maintaining aspect ratio
+      let { width, height } = img;
+      
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+      }
+      
+      // Set canvas dimensions
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            // Create a new File object with the compressed blob
+            const compressedFile = new File([blob], file.name, {
+              type: format,
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          } else {
+            reject(new Error('Canvas to Blob conversion failed'));
+          }
+        },
+        format,
+        quality
+      );
+    };
+    
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 async function onFileSelectedAndUpload(event) {
@@ -69,7 +127,8 @@ async function onFileSelectedAndUpload(event) {
     resetFileInput();
     return;
   }
-  const maxSizeMB = 5;
+  
+  const maxSizeMB = 10; // Increased since we'll compress
   if (file.size > maxSizeMB * 1024 * 1024) {
     emit('upload-error', `Súbor je príliš veľký (Max ${maxSizeMB}MB).`);
     resetFileInput();
@@ -80,12 +139,38 @@ async function onFileSelectedAndUpload(event) {
   // errorMessage.value = null;
 
   try {
+    let fileToUpload = file;
+    
+    // Compress image if it's not a GIF (to preserve animations)
+    if (file.type !== 'image/gif') {
+      try {
+        console.log(`Original file size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        fileToUpload = await compressImage(
+          file, 
+          props.maxWidth, 
+          props.maxHeight, 
+          props.quality, 
+          props.compressFormat
+        );
+        console.log(`Compressed file size: ${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB`);
+        console.log(`Compression ratio: ${((1 - fileToUpload.size / file.size) * 100).toFixed(1)}%`);
+      } catch (compressionError) {
+        console.warn('Compression failed, using original file:', compressionError);
+        fileToUpload = file; // Fallback to original file
+      }
+    }
+
     const uniquePrefix = Date.now();
     const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const newFilename = `${uniquePrefix}_${sanitizedFilename}`;
+    const fileExtension = props.compressFormat === 'image/webp' ? '.webp' : '.jpg';
+    const baseFilename = sanitizedFilename.replace(/\.[^/.]+$/, ""); // Remove original extension
+    const newFilename = file.type === 'image/gif' 
+      ? `${uniquePrefix}_${sanitizedFilename}` // Keep original name for GIFs
+      : `${uniquePrefix}_${baseFilename}${fileExtension}`; // Use new extension for compressed images
+    
     const newFileRef = storageRefFs(storage, `${props.storagePath}/${newFilename}`); // Use renamed import
 
-    await uploadBytes(newFileRef, file);
+    await uploadBytes(newFileRef, fileToUpload);
     const newUrl = await getDownloadURL(newFileRef);
     const newPath = newFileRef.fullPath;
 

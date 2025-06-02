@@ -12,36 +12,49 @@
         @error="handleLocationComponentError"
       />
       <RoomFilter
-        class="flex-1 min-w-0"
+        class="flex-1 min-w-0 z-50"
         @filters-changed="handleFiltersChange"
         :initial-address="effectiveSearchAddress"
       />
     </div>
 
     <!-- Mobile Toggle Buttons (visible only on mobile) -->
-    <div class="flex md:hidden mx-4 mb-4">
-      <button 
-        @click="activeView = 'list'"
-        :class="[
-          'flex-1 py-2 px-4 text-sm font-medium rounded-l-lg border',
-          activeView === 'list' 
-            ? 'bg-blue-500 text-white border-blue-500' 
-            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-        ]"
-      >
-        Room List
-      </button>
-      <button 
-        @click="activeView = 'map'"
-        :class="[
-          'flex-1 py-2 px-4 text-sm font-medium rounded-r-lg border-t border-r border-b',
-          activeView === 'map' 
-            ? 'bg-blue-500 text-white border-blue-500' 
-            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-        ]"
-      >
-        Map View
-      </button>
+    <div class="flex md:hidden mx-4 mb-6">
+      <div class="flex w-full bg-white/60 backdrop-blur-sm rounded-xl p-1 shadow-lg border border-white/20">
+        <button 
+          @click="activeView = 'list'"
+          :class="[
+            'flex-1 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out',
+            activeView === 'list' 
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md transform scale-105' 
+              : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+          ]"
+        >
+          <span class="flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+            </svg>
+            Room List
+          </span>
+        </button>
+        <button 
+          @click="activeView = 'map'"
+          :class="[
+            'flex-1 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out',
+            activeView === 'map' 
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md transform scale-105' 
+              : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+          ]"
+        >
+          <span class="flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Map View
+          </span>
+        </button>
+      </div>
     </div>
 
     <!-- Main Content Area -->

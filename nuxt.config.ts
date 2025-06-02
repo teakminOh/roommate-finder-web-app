@@ -20,7 +20,15 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         { rel: 'stylesheet', href: 'https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.css' },
-        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200' },
+        { rel: 'stylesheet',  href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap' },
+        {
+          rel: 'preload',
+          // Use the exact URL you provided:
+          href: 'https://fonts.gstatic.com/s/materialsymbolsoutlined/v247/kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsI.woff2',
+          as: 'font',
+          type: 'font/woff2',
+          crossorigin: 'anonymous' // Important for fonts from different origins
+        }
       ],
       script: [
         {
@@ -37,6 +45,9 @@ export default defineNuxtConfig({
     },
   },
   ssr: false,
+  nitro: {
+    preset: 'static'
+  },
   modules: [
     'nuxt-vuefire',
   ],
