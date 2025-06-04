@@ -1,106 +1,48 @@
-# 🏠 Roommate Finder Web App
+# 🏠 RoomMate Finder – Web Application for Flatmate Matching
 
-A fullstack roommate and room-searching web app built with **Nuxt 3**, **Firebase**, **Node.js**, and **Google APIs** (Maps, Places, Routes). The app features intelligent matching for roommates and rooms, real-time chat functionality, and advanced distance and travel duration calculations.
+This is a full-stack web application that helps users find compatible flatmates or rental rooms based on preferences, location, and lifestyle. The project was developed as part of a bachelor’s thesis with a focus on responsive design, modern architecture, and serverless deployment.
 
----
+## 📸 Preview
+![preview](https://github.com/user-attachments/assets/c0bdec65-c06c-41dc-b7ee-d234dad15b43)
 
-## 🚀 Key Features
 
-- **🔐 Authentication:**
+## 🔍 Features
 
-  - Secure login with Firebase Authentication (email/password, Google Sign-In).
+- 🔐 User authentication with Firebase
+- 👤 Two user roles:
+  - **Flatmate** – looking for a place or other roommates
+  - **Room Provider** – offering a room or property
+- 📍 Filter rooms/people by location, budget, and preferences
+- 📬 Real-time chat using Firebase Firestore
+- 🤝 Smart matching system based on weighted preferences
+- 🗘️ Map with route visualization and travel time (Google Maps API)
+- 📸 Upload photos for rooms or profiles
+- 💡 Responsive design for both mobile and desktop
 
-- **🤝 Matching System:**
+## 🧱 Tech Stack
 
-  - Matches **roommates to roommates** and **roommates to rooms** based on user preferences.
-  - Advanced scoring system ensuring relevant and accurate matches.
+| Layer        | Technology                     |
+|--------------|--------------------------------|
+| Frontend     | Nuxt 3 (Vue 3) + Tailwind CSS  |
+| Backend      | Firebase Cloud Functions       |
+| Database     | Firebase Firestore             |
+| Auth         | Firebase Authentication        |
+| Hosting      | Firebase Hosting               |
+| Maps         | Google Maps JavaScript & Directions API |
 
-- **💬 Real-Time Chat:**
+## 🌐 Live Demo
 
-  - Instant messaging using Firebase real-time database.
-  - Real-time notifications and live chat updates.
+[👉 Open Web App](https://real-estate-app-5c1cb.web.app/)
 
-- **🗺️ Distance & Travel Duration:**
-
-  - Calculates precise distances and durations (car, public transit, walking) using Google Routes API.
-  - Interactive maps for room location visualization powered by Google Maps & Places API.
-
----
-
-## 🌐 Tech Stack
-
-- **Frontend:** Nuxt 3 (Vue.js Composition API)
-- **Backend:** Node.js & Firebase Cloud Functions
-- **Database:** Firestore
-- **Authentication:** Firebase Auth
-- **APIs:** Google Maps, Google Places, Google Routes
-
----
-
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
-roommate-finder/
-├── components/         # Vue components
-├── pages/              # Nuxt pages and routing
-├── composables/        # Reusable logic
-├── utils/              # Helper functions
-├── firebase/           # Firebase config
-├── functions/          # Firebase Cloud Functions
-└── assets/             # Images and icons
+├── components/        # Vue/Nuxt components (Navbar, RoomItem, etc.)
+├── pages/             # Nuxt pages (home, search, chat, etc.)
+├── composables/       # Custom composables (e.g., useCurrentUser)
+├── functions/         # Firebase Cloud Functions
+├── public/            # Static files (images, favicon, preview)
+└── assets/            # Global styles and fonts
 ```
 
----
-
-## ⚙️ Setup & Installation
-
-### Prerequisites
-
-- Node.js (v18 or higher recommended)
-- Firebase CLI
-- Google API credentials
-
-### Installation Steps
-
-Clone this repository:
-
-```bash
-git clone https://github.com/your-username/roommate-finder.git
-cd roommate-finder
-npm install
-```
-
-Set up your `.env` file with your credentials:
-
-```env
-NUXT_FIREBASE_API_KEY=your_firebase_api_key
-NUXT_FIREBASE_PROJECT_ID=your_project_id
-GOOGLE_MAPS_API_KEY=your_google_maps_api_key
-```
-
-Run the development server:
-
-```bash
-npm run dev
-```
-
-Deploy Firebase Functions:
-
-```bash
-cd functions
-npm install
-firebase deploy --only functions
-```
-
----
-
-## 📸 Screenshots
-
-*(Add project screenshots here)*
-
----
-
-## 📅 Future Improvements
-
-- Use AI for matching
-- Update filters
+Made with ❤️ using Nuxt, Firebase, and Google Maps.
