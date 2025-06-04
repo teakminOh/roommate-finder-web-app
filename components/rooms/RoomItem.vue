@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl relative cursor-pointer w-80 sm:w-96"
+    class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg hover:shadow-2xl relative cursor-pointer w-96"
     @mouseenter="showArrows = true"
     @mouseleave="showArrows = false"
     @click="isModalOpen = true"
@@ -217,9 +217,14 @@ button:hover {
 }
 
 /* Custom responsive breakpoint for screens smaller than 397px */
-@media (max-width: 396px) {
-  .w-80 {
-    width: 18rem; /* 288px - smaller than w-80 (320px) */
+@media (max-width: 403px) {
+  .w-96 {
+    width: 22rem; /* 288px - smaller than w-80 (320px) */
+  }
+}
+@media (max-width: 367px) {
+  .w-96 {
+    width: 19rem; /* 288px - smaller than w-80 (320px) */
   }
 }
 

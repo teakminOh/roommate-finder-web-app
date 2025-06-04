@@ -26,7 +26,21 @@
         </svg>
         <span class="font-medium text-lg">Späť</span>
       </button>
-
+      <button
+        @click="$emit('close')"
+        class="fixed bottom-14 right-6 z-50 bg-blue-800 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center w-14 h-14 max-[779px]:block hidden"
+      >
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          class="h-8 w-8 ml-3"
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          stroke-width="2"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
       <!-- Image Gallery -->
       <div class="grid grid-cols-[2fr_1fr_1fr] gap-2 p-4 pb-0 mt-12">
         <div 
