@@ -30,10 +30,6 @@ This is a full-stack web application that helps users find compatible flatmates 
 | Hosting      | Firebase Hosting               |
 | Maps         | Google Maps JavaScript & Directions API |
 
-## 🌐 Live Demo
-
-[👉 Open Web App](https://real-estate-app-5c1cb.web.app/)
-
 ## 📁 Project Structure
 
 ```
